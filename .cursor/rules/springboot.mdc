@@ -1,0 +1,83 @@
+---
+description: Spring Boot application structure, conventions, and build guidance
+globs:
+  - "**/*.java"
+  - "**/pom.xml"
+  - "**/build.gradle*"
+  - "**/application*.yml"
+  - "**/application*.yaml"
+  - "**/application*.properties"
+alwaysApply: false
+---
+
+# Spring Boot Application Rules
+
+## Project Structure
+
+Use a layered layout under `src/main/java/<base-package>/`:
+
+- `controller/` — REST endpoints; no business logic
+- `service/` — business logic and orchestration
+- `repository/` — data access (Spring Data JPA interfaces)
+- `model/` or `entity/` — JPA entities and domain types
+- `dto/` — request/response objects; never expose entities directly
+- `config/` — `@Configuration` classes, security, beans
+- `exception/` — custom exceptions and `@ControllerAdvice` handlers
+
+Keep `Application.java` in the base package only.
+
+## Dependencies & Build
+
+- Prefer **Spring Boot 3.x** with **Java 17+**
+- Use **Maven** (`pom.xml`) or **Gradle** (`build.gradle.kts`) — match what the project already uses
+- Core starters: `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`
+- Test starter: `spring-boot-starter-test` with JUnit 5
+- Run locally: `./mvnw spring-boot:run` or `./gradlew bootRun`
+- Package: `./mvnw package` or `./gradlew build`
+
+## Coding Conventions
+
+```java
+// ✅ Controller — thin, validates input, delegates to service
+@RestController
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+public class UserController {
+    private final UserService userService;
+
+    @GetMapping("/{id}")
+    public UserResponse getUser(@PathVariable Long id) {
+        return userService.findById(id);
+    }
+}
+
+// ❌ BAD — business logic in controller
+// ❌ BAD — returning JPA entity directly
+```
+
+- Use constructor injection (`@RequiredArgsConstructor` or explicit constructor); avoid `@Autowired` on fields
+- Validate request bodies with `@Valid` and Jakarta Bean Validation annotations
+- Map entities ↔ DTOs in the service layer (or a dedicated mapper)
+- Use `@Transactional` on service methods that write to the database
+- Handle errors with `@ControllerAdvice` + `@ExceptionHandler`; return consistent error responses
+
+## Configuration
+
+- Externalize config in `application.yml` (preferred) or `application.properties`
+- Use profiles: `application-dev.yml`, `application-prod.yml`
+- Never commit secrets; use environment variables or a secrets manager
+- Enable `spring.jpa.open-in-view=false` for REST APIs
+
+## Testing
+
+- Unit test services with Mockito (`@ExtendWith(MockitoExtension.class)`)
+- Integration test controllers with `@WebMvcTest` or full context with `@SpringBootTest`
+- Use `@DataJpaTest` for repository layer tests
+- Name tests descriptively: `shouldReturnUser_whenIdExists()`
+
+## REST API
+
+- Use plural nouns: `/api/users`, not `/api/user`
+- Return appropriate HTTP status codes (201 for create, 204 for delete)
+- Version APIs when needed: `/api/v1/users`
+- Document with Springdoc OpenAPI (`springdoc-openapi-starter-webmvc-ui`) when the project uses it
