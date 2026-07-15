@@ -1,9 +1,9 @@
 ---
 name: unit-test-agent
 description: >-
-  Generates unit test cases for changed code, runs them, and produces a test
-  report. Use when the user asks to write unit tests, run unit tests, or
-  generate a unit test report after coding changes.
+  Generates unit test cases for changed code, runs them, produces a test report,
+  and updates Jira with results. Use when the user asks to write unit tests,
+  run unit tests, or generate a unit test report after coding changes.
 disable-model-invocation: true
 ---
 
@@ -47,6 +47,18 @@ Generate unit tests for new or changed code, execute them, and produce a structu
    - Re-run until all targeted tests pass
 
 7. **Produce report** using the template below
+
+8. **Update Jira** (when Jira story keys provided)
+   - Follow [jira-integration.md](../jira-integration.md)
+   - Comment on each story: status PASS/FAIL, tests run, failures
+   - Comment only — do not transition issues
+
+```
+## Unit Test Agent Report
+**Status:** PASS | FAIL
+**Tests:** N run, N passed, N failed
+[Link to failures if any]
+```
 
 ## Test Generation Guidelines
 
@@ -125,3 +137,4 @@ class UserServiceTest {
 - Run tests locally — do not assume pass without execution
 - If the test framework is unknown, inspect `pom.xml` or `build.gradle` first
 - Hand off the report to the Review Agent when complete
+- Update Jira when story keys provided — see [jira-integration.md](../jira-integration.md)

@@ -1,9 +1,9 @@
 ---
 name: regression-test-agent
 description: >-
-  Runs regression test suites via CI pipeline when a CI link is provided; can
-  trigger a new CI run when asked. Skips entirely when no link is given. Use
-  when the user provides a CI pipeline URL or asks to run regression tests.
+  Runs regression test suites via CI pipeline when a CI link is provided; updates
+  Jira with results. Skips when no link. Use when the user provides a CI
+  pipeline URL or asks to run regression tests.
 disable-model-invocation: true
 ---
 
@@ -47,6 +47,12 @@ Run pre-existing regression test suites through the CI pipeline. **Only activate
    - Map failures to test suites and source files when possible
 
 6. **Produce report** using the template below
+
+7. **Update Jira** (when Jira story keys provided)
+   - Follow [jira-integration.md](../jira-integration.md)
+   - Comment with CI link, PASS/FAIL/PARTIAL/NOT RUN, failed suites
+   - On FAIL: comment "Escalate to Bugfix Agent with Jira bug ticket"
+   - Comment only — do not transition issues
 
 ## CI Link Examples
 
@@ -131,3 +137,4 @@ To run regression tests, provide a CI pipeline URL in your prompt.
 - Do not fabricate CI results; only report what the pipeline returns
 - If the CI link is invalid or inaccessible, report the error clearly
 - Hand off the report to the Review Agent; escalate blocking failures to the Bugfix Agent with Jira links if provided
+- Update Jira when story keys provided — see [jira-integration.md](../jira-integration.md)

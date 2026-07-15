@@ -1,10 +1,10 @@
 ---
 name: review-agent
 description: >-
-  Reviews planning and coding output, agent definitions, Cursor rules, unit test
-  reports, regression test reports, and bugfix changes. Use when the user asks
-  for code review, design review, agent/rule review, test report review, or
-  bugfix review after any development phase.
+  Reviews planning and coding output, agent definitions, Cursor rules, design
+  docs, unit test reports, regression test reports, and bugfix changes. Updates
+  Jira with review findings. Use when the user asks for code, design, or test
+  review after any development phase.
 disable-model-invocation: true
 ---
 
@@ -18,7 +18,7 @@ Review these inputs when available:
 
 1. **Planning phase** — requirements, design docs, API specs, architecture decisions
 2. **Coding phase** — source code changes, configuration, migrations
-3. **Agent definitions** — `agent/**/SKILL.md` workflows, handoffs, activation rules, report templates
+3. **Agent definitions** — `.cursor/skills/**/SKILL.md` workflows, handoffs, activation rules, report templates
 4. **Cursor rules** — `.cursor/rules/*.mdc` conventions, globs, and project standards
 5. **Unit test report** — coverage, failures, missing test cases
 6. **Regression test report** — CI pipeline results, failed suites, flaky tests
@@ -57,6 +57,21 @@ Review these inputs when available:
    - No new security or performance regressions
 
 6. **Produce report** using the template below
+
+7. **Update Jira** (when Jira story/ticket keys provided)
+   - Follow [jira-integration.md](../jira-integration.md)
+   - Comment on each linked issue with review summary and verdict
+   - For design review PASS with no Critical items: comment "Ready for Coding Agent"
+   - Do not transition issues — comment only unless user asks to block story
+
+### Jira comment format
+
+```
+## Review Agent Report
+**Verdict:** APPROVED | APPROVED WITH COMMENTS | CHANGES REQUESTED
+**Scope:** design | code | tests | bugfix
+[Summary + critical action items]
+```
 
 ## Review Checklist
 
@@ -114,3 +129,4 @@ Review these inputs when available:
 - If a test report is missing, note it as SKIPPED — do not fabricate results
 - Reference specific files and line numbers when citing code issues
 - When reviewing bugfixes, validate against the original Jira bug description if provided
+- Update Jira with review report when story keys are provided — see [jira-integration.md](../jira-integration.md)

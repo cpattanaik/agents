@@ -62,6 +62,20 @@ Investigate and fix bugs reported via Jira tickets. **In production, all bugfixe
 
 7. **Produce report** using the template below
 
+8. **Update Jira**
+   - Follow [jira-integration.md](../jira-integration.md)
+   - Comment on bug ticket with root cause, fix summary, test added, status FIXED/BLOCKED
+   - Transition bug → **In Progress** on start (optional)
+   - Do not close ticket unless user explicitly asks
+
+```
+## Bugfix Agent Report
+**Jira:** PROJ-123
+**Status:** FIXED | PARTIAL | BLOCKED
+**Root cause:** ...
+**PR/branch:** fix/PROJ-123-...
+```
+
 ## Jira Link Examples
 
 ```
@@ -120,7 +134,8 @@ FIXED | PARTIALLY FIXED | BLOCKED
 - **Production**: never start a bugfix without a Jira ticket link
 - Do not start in any environment without a Jira link — ask the user to provide one
 - Use Jira ticket fields (summary, description, priority, environment, reproduction steps) as the source of truth
-- Do not close or update Jira tickets unless explicitly asked
+- Do not close or update Jira ticket status to Done unless explicitly asked
+- Always comment on Jira with bugfix report — see [jira-integration.md](../jira-integration.md)
 - Keep fixes scoped to the reported bug — no drive-by changes
 - Hand off the bugfix report and code changes to the Review Agent
 - After fix, recommend running the Unit Test Agent and Regression Test Agent (if CI link available)

@@ -1,9 +1,9 @@
 ---
 name: pr-agent
 description: >-
-  Creates and manages pull requests after code review and testing phases pass.
-  Use when the user asks to open a PR, update a PR, or prepare changes for
-  merge after review and test reports are green.
+  Creates and manages pull requests after review and testing pass. Updates Jira
+  with PR link and status. Use when the user asks to open a PR or prepare
+  changes for merge.
 disable-model-invocation: true
 ---
 
@@ -26,7 +26,7 @@ If prerequisites are not met, report what's blocking and do not open the PR.
 
 Skip the unit test prerequisite when the PR contains **only** non-runnable artifacts:
 
-- Agent definitions (`agent/**/SKILL.md`)
+- Agent definitions (`.cursor/skills/**/SKILL.md`)
 - Cursor rules (`.cursor/rules/*.mdc`)
 - Documentation (`*.md`, `README`)
 
@@ -72,6 +72,20 @@ In the PR body, note `Unit tests: N/A — config/docs only`. For any application
 5. **Verify PR health**
    - Check CI status on the PR: `gh pr checks <number>`
    - Report PR URL and initial CI status
+
+6. **Update Jira** (when Jira story keys provided)
+   - Follow [jira-integration.md](../jira-integration.md)
+   - Comment on each story with PR URL and test evidence
+   - Transition story → **In Review** (if not already)
+   - Do not transition to Done unless user explicitly confirms merge
+
+```
+## PR Agent Report
+**PR:** [url]
+**Review:** APPROVED | APPROVED WITH COMMENTS
+**Unit tests:** PASS | N/A
+**Regression:** PASS | NOT RUN
+```
 
 ## PR Body Template
 
@@ -122,6 +136,7 @@ When a PR already exists:
 - Do not create a PR if Review Agent has 🔴 Critical open items
 - Do not push unless the user has approved commits (follow git safety protocol)
 - Return the PR URL when done
+- Update Jira when story keys provided — see [jira-integration.md](../jira-integration.md)
 
 ## Handoff
 
