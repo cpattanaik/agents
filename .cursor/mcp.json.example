@@ -1,9 +1,12 @@
 {
   "mcpServers": {
     "atlassian": {
-      "command": "bash",
-      "args": ["scripts/run-atlassian-mcp.sh"],
+      "command": "node",
+      "args": [
+        ".cursor/mcp-servers/mcp-atlassian/dist/index.js"
+      ],
       "env": {
+        "MCP_SERVER_MODE": "true",
         "ATLASSIAN_BASE_URL": "${env:ATLASSIAN_URL}",
         "ATLASSIAN_EMAIL": "${env:ATLASSIAN_EMAIL}",
         "ATLASSIAN_API_TOKEN": "${env:ATLASSIAN_API_TOKEN}"
@@ -17,8 +20,10 @@
       }
     },
     "github-wiki": {
-      "command": "bash",
-      "args": ["scripts/run-github-wiki-mcp.sh"],
+      "command": "node",
+      "args": [
+        ".cursor/mcp-servers/github-wiki-mcp/dist/index.js"
+      ],
       "env": {
         "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
       }
