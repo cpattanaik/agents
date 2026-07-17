@@ -1,0 +1,146 @@
+# =============================================================================
+# Agentic SDLC — Project Configuration (template)
+# =============================================================================
+#   cp project-config.yml.example project-config.yml
+#
+# All agents read project-config.yml. Customize only this file per repository.
+#
+# First run: pipeline.mode defaults to dev (MCP/Jira optional).
+# After MCP + CI + Jira transitions configured → set pipeline.mode: strict
+#
+# Key build fields (build.tool: maven — bundled CI is Maven-only):
+#   compile_command, test_command, integration_test_command, regression_command
+#   java_version, maven_module
+# =============================================================================
+
+project:
+  name: My Project
+  slug: my-project
+
+github:
+  owner: myorg
+  repo: my-repo
+  default_branch: main
+
+jira:
+  project_key: PROJ
+  epic_key: null
+
+  epic_name_field: customfield_10011
+  epic_link_field: customfield_10014
+
+  custom_fields:
+    design_doc_url: customfield_10100
+    pr_url: customfield_10101
+
+  # Discover IDs: GET /rest/api/3/issue/{KEY}/transitions — see docs/PROJECT-CONFIG.md
+  # null = skip transition (comment only); set IDs before switching pipeline.mode to strict
+  transitions:
+    story_to_refined: null
+    story_to_ready_for_dev: null
+    story_to_in_progress: null
+    story_to_in_review: null
+    story_to_done: null
+    bug_to_in_progress: null
+
+wiki:
+  pages:
+    overview: Overview
+    prd: PRD
+    architecture: Architecture
+    technical_design: Technical-Design
+    agent_reports: Agent-Reports
+    stories: Stories
+
+pipeline:
+  mode: dev                         # dev = initial setup (MCP/Jira optional); strict = corporate gates
+
+  gates:
+    planning:
+      require_artifact_approval: false  # reserved — human sign-off before design (not wired yet)
+    design:
+      require_planning_pass_report: true
+      allow_skip_with_approver: true
+    regression:
+      mandatory_in_strict: true
+      auto_discover_ci: true
+      ci_workflow: ci
+      ci_job: regression
+    unit_tests:
+      coverage_threshold_percent: 80
+      enforce_threshold_in_strict: true
+    security:
+      mandatory_in_strict: true
+    integration_tests:
+      mandatory_for_api_changes: true
+
+  environments:
+    dev:
+      mode: dev
+      gates:
+        regression:
+          mandatory_in_strict: false
+        security:
+          mandatory_in_strict: false
+    staging:
+      mode: strict
+    production:
+      mode: strict
+      gates:
+        planning:
+          require_artifact_approval: true
+
+  reporting:
+    wiki_canonical: true
+    mirror_to_repo: false
+    base_path: docs/agent-reports
+
+# --- Build & test — agents and CI read these when build.tool: maven ----------
+build:
+  tool: maven                         # Maven only — bundled CI (.github/workflows/ci.yml) is Maven/Java
+  java_version: "21"                  # CI setup-java; use 17 or 21 for Spring Boot 3
+  maven_module: null                  # optional multi-module: e.g. api-module → -pl flag
+
+  compile_command: ./mvnw -B compile
+  test_command: ./mvnw -B test
+  integration_test_command: ./mvnw -B verify -Pintegration
+  regression_command: ./mvnw -B verify -Pregression
+  ci_workflow: ci
+
+  regression:
+    profile: regression
+    groups: regression
+    description: Full regression suite (CI job regression)
+    includes: []
+    excludes: []
+
+security:
+  block_on: [critical, high]
+
+  local:
+    enabled: true
+    # wrapper_script: ./scripts/security-local.sh
+
+    commands:
+      - name: secrets
+        tool: gitleaks
+        command: gitleaks detect --source . --verbose
+        required: true
+        scope: repo
+
+      - name: sast
+        tool: semgrep
+        command: semgrep --config auto --error
+        required: true
+        scope: changed_files
+
+      - name: dependencies
+        tool: owasp-dependency-check
+        command: ./mvnw org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=7
+        required: false
+
+  ci:
+    enabled: true
+    require_in_strict: true
+    workflow: ci
+    job: security

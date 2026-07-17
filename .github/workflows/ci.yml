@@ -1,0 +1,279 @@
+# GitHub Actions CI — Agent Pipeline Template
+#
+# Copy to your application repo:
+#   mkdir -p .github/workflows .github/scripts
+#   cp .github/workflows/ci.yml <app-repo>/.github/workflows/ci.yml
+#   cp .github/scripts/load-project-config.py <app-repo>/.github/scripts/
+#   cp project-config.yml.example <app-repo>/project-config.yml
+#
+# Matches project-config.yml:
+#   pipeline.gates.regression.ci_workflow / ci_job
+#   build.test_command, build.integration_test_command, build.regression_command
+#   build.regression.profile, build.regression.groups
+#
+# Agent mapping:
+#   unit-test      → unit-test job        (PR Agent evidence)
+#   integration-test → integration-test job
+#   security       → security job         (Security Review Agent CI gate)
+#   regression     → regression job       (Regression Test Agent)
+#   ci-success     → aggregate gate       (PR Agent: gh pr checks)
+#
+# Optional secrets:
+#   NVD_API_KEY         — speeds OWASP dependency-check
+
+name: ci
+
+on:
+  push:
+    branches: [main, 'release/**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'  # fallback when project-config.yml missing
+
+jobs:
+  # ---------------------------------------------------------------------------
+  config — load commands from project-config.yml (single source of truth)
+  # ---------------------------------------------------------------------------
+  config:
+    name: config
+    runs-on: ubuntu-latest
+    outputs:
+      test_command: ${{ steps.load.outputs.test_command }}
+      integration_test_command: ${{ steps.load.outputs.integration_test_command }}
+      regression_command: ${{ steps.load.outputs.regression_command }}
+      compile_command: ${{ steps.load.outputs.compile_command }}
+      java_version: ${{ steps.load.outputs.java_version }}
+      regression_profile: ${{ steps.load.outputs.regression_profile }}
+      regression_groups: ${{ steps.load.outputs.regression_groups }}
+      regression_description: ${{ steps.load.outputs.regression_description }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load project-config.yml
+        id: load
+        run: |
+          pip install -q pyyaml
+          python3 .github/scripts/load-project-config.py >> "$GITHUB_OUTPUT"
+          {
+            echo "## CI commands (from project-config.yml)"
+            echo "| Setting | Value |"
+            echo "|---------|-------|"
+            python3 .github/scripts/load-project-config.py | while IFS='=' read -r key value; do
+              echo "| ${key} | \`${value}\` |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  build
+  # ---------------------------------------------------------------------------
+  build:
+    name: build
+    needs: config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ needs.config.outputs.java_version || env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Compile
+        run: ${{ needs.config.outputs.compile_command }}
+
+  # ---------------------------------------------------------------------------
+  unit-test — Unit Test Agent / PR Agent
+  # ---------------------------------------------------------------------------
+  unit-test:
+    name: unit-test
+    needs: [config, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ needs.config.outputs.java_version || env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Run unit tests
+        run: ${{ needs.config.outputs.test_command }}
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            **/target/surefire-reports/
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  integration-test — Integration Test Agent / PR Agent
+  # ---------------------------------------------------------------------------
+  integration-test:
+    name: integration-test
+    needs: [config, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ needs.config.outputs.java_version || env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Run integration tests
+        run: ${{ needs.config.outputs.integration_test_command }}
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: |
+            **/target/failsafe-reports/
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  security — Security Review Agent (security.ci.job: security)
+  # ---------------------------------------------------------------------------
+  security:
+    name: security
+    needs: [config, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secrets scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: SAST (semgrep)
+        run: |
+          pip install --quiet semgrep
+          semgrep --config auto --error .
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ needs.config.outputs.java_version || env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Dependency CVE scan (OWASP)
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          MVN="./mvnw"
+          [ -x "$MVN" ] || MVN="mvn"
+          $MVN -B org.owasp:dependency-check-maven:check \
+            -DfailBuildOnCVSS=7 \
+            -DnvdApiKey="${NVD_API_KEY:-}"
+
+      - name: Upload dependency-check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-dependency-check
+          path: |
+            **/target/dependency-check-report.html
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  regression — Regression Test Agent (full CI regression gate)
+  # ---------------------------------------------------------------------------
+  regression:
+    name: regression
+    needs: [config, unit-test, integration-test, security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ needs.config.outputs.java_version || env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Run regression suite
+        env:
+          REGRESSION_COMMAND: ${{ needs.config.outputs.regression_command }}
+          REGRESSION_PROFILE: ${{ needs.config.outputs.regression_profile }}
+          REGRESSION_GROUPS: ${{ needs.config.outputs.regression_groups }}
+        run: |
+          echo "Command: $REGRESSION_COMMAND"
+          echo "Profile: $REGRESSION_PROFILE | Groups: $REGRESSION_GROUPS"
+          eval "$REGRESSION_COMMAND"
+
+      - name: Publish regression summary
+        if: always()
+        env:
+          REGRESSION_COMMAND: ${{ needs.config.outputs.regression_command }}
+          REGRESSION_DESCRIPTION: ${{ needs.config.outputs.regression_description }}
+        run: |
+          echo "## Regression Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Suite: ${REGRESSION_DESCRIPTION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Command: \`${REGRESSION_COMMAND}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch: \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-results
+          path: |
+            **/target/surefire-reports/
+            **/target/failsafe-reports/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  ci-success — PR Agent aggregate gate (gh pr checks)
+  # ---------------------------------------------------------------------------
+  ci-success:
+    name: ci-success
+    needs: [config, build, unit-test, integration-test, security, regression]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify required jobs passed
+        run: |
+          check() {
+            local name="$1" result="$2"
+            echo "${name}: ${result}"
+            if [ "$result" != "success" ]; then
+              echo "::error::Required job '${name}' did not succeed (result: ${result})"
+              exit 1
+            fi
+          }
+          check "build"        "${{ needs.build.result }}"
+          check "unit-test"    "${{ needs.unit-test.result }}"
+          check "integration-test" "${{ needs.integration-test.result }}"
+          check "security"     "${{ needs.security.result }}"
+          check "regression"   "${{ needs.regression.result }}"
+          echo "All CI gates passed — ready for @pr-agent"
+
+      - name: PR Agent summary
+        run: |
+          echo "## CI Success — PR Ready" >> "$GITHUB_STEP_SUMMARY"
+          echo "Run URL for agents:" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> "$GITHUB_STEP_SUMMARY"

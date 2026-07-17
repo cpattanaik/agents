@@ -11,15 +11,27 @@ disable-model-invocation: true
 
 Validate planning artifacts, **create Jira epics and stories from PRD when they do not exist**, cross-check traceability, and confirm readiness for the Design Agent.
 
+**Jira is mandatory** — this agent creates the epic and Must-have stories in Jira. Do not run planning without Jira MCP (or REST API) and `jira.project_key` configured.
+
 ## Inputs (required)
 
 | Input | Source |
 |-------|--------|
-| PRD | Repo `docs/` path or user-provided content |
-| Architecture document | Repo `docs/` path or user-provided content |
+| PRD | Draft content or user-provided — published to wiki by agent |
+| Architecture document | Draft content or user-provided — published to wiki by agent |
+| Project config | [project-config.yml](../../project-config.yml) — `github.*`, `project.*`, `jira.project_key` |
+| Jira project key | `project-config.yml` → `jira.project_key`, env `JIRA_PROJECT_KEY`, or user prompt |
 | Jira epic link | Optional — if missing, agent creates epic from PRD |
 
-If PRD or architecture is missing, stop and ask the user to provide them.
+If PRD or architecture content is missing, stop and ask the user to provide them.
+
+If Jira is not configured (no MCP/REST, or missing `jira.project_key`):
+- **`pipeline.mode: strict`** → FAIL the planning gate
+- **`pipeline.mode: dev`** → FAIL the planning gate — Jira is required for epic/story creation; configure MCP first (see [MCP-SETUP.md](../../docs/MCP-SETUP.md))
+
+If GitHub Wiki MCP is not configured:
+- **`strict`** → FAIL (documents must be published to wiki)
+- **`dev`** → WARN; optional repo mirror when `pipeline.reporting.mirror_to_repo: true`
 
 ## Workflow
 
@@ -28,6 +40,7 @@ If PRD or architecture is missing, stop and ask the user to provide them.
 1. **Check for existing Jira epic**
    - If user provides epic key/URL → fetch and use it
    - If no epic provided → **create epic** from PRD title and summary
+   - **Update** `jira.epic_key` in [project-config.yml](../../project-config.yml) with the resolved epic key
 
 2. **Create stories from PRD**
    - For each Must-have user story (US-X) in the PRD:
@@ -46,32 +59,51 @@ If PRD or architecture is missing, stop and ask the user to provide them.
 
 4. Follow [jira-integration.md](../jira-integration.md) for create operations
 
-### B. Validate and cross-check
+### B. Publish documents to GitHub Wiki
 
-5. **Fetch all Jira issues** under epic
+5. **Create epic wiki folder** per [wiki-integration.md](../wiki-integration.md) — paths from `project-config.yml` (`project.slug`, `jira.epic_key`):
+   - `Projects/{slug}/Epics/{EPIC-KEY}/Overview`
+   - `Projects/{slug}/Epics/{EPIC-KEY}/PRD`
+   - `Projects/{slug}/Epics/{EPIC-KEY}/Architecture`
+
+6. **Publish PRD and Architecture** via `github-wiki` MCP (`write_wiki_page`)
+
+7. **Create story stub pages** under `.../Stories/{STORY-KEY}-{slug}` (one page per Jira story)
+
+### C. Validate and cross-check
+
+8. **Fetch all Jira issues** under epic
    - Extract: summary, description, AC, parent, blocked-by, assignee, DoD
 
-6. **Validate PRD** — goals, stories, FRs, ACs present
+9. **Validate PRD** — goals, stories, FRs, ACs present
 
-7. **Validate architecture document** — components, stack, NFRs
+10. **Validate architecture document** — components, stack, NFRs
 
-8. **Cross-check PRD ↔ Jira stories**
-   - Every Must-have PRD story has a Jira story
-   - Every Jira story maps to a PRD user story or FR
-   - Blocked-by dependencies documented
+11. **Cross-check PRD ↔ Jira stories**
+    - Every Must-have PRD story has a Jira story
+    - Every Jira story maps to a PRD user story or FR
+    - Blocked-by dependencies documented
+    - Every Jira story description includes wiki links (epic Overview, story page, PRD, Architecture)
 
-9. **Produce planning gate report**
+12. **Produce planning gate report**
 
-10. **Update Jira** — on PASS:
-    - Comment on epic with planning report + list of created stories
-    - Comment on each story with PRD/FR mapping
-    - Transition stories to **Refined** (if workflow supports it)
+13. **Publish report to wiki** → `.../Agent-Reports/planning-agent-{date}.md`
+
+14. **Update Jira** — on PASS:
+    - Comment on epic with wiki URLs: Overview, PRD, Architecture, planning report
+    - Comment on each story with wiki URLs: PRD, Architecture, story page, epic Overview
+    - Transition stories to **Refined** only when `jira.transitions.story_to_refined` is set (non-null); otherwise comment only — see [jira-integration.md](../jira-integration.md)
 
 ## Story creation template (Jira description)
 
 ```markdown
 ## User story
 As a [persona], I [action] so that [benefit].
+
+## Wiki
+- Epic: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/Overview
+- PRD: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/PRD
+- Story: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/Stories/{STORY-KEY}-slug
 
 ## PRD reference
 US-X | FR-1, FR-2
@@ -105,6 +137,9 @@ US-X | FR-1, FR-2
 ## Summary
 PASS | FAIL — ready for Design Agent
 
+## Configuration
+- **pipeline.mode**: dev | strict
+
 ## Epic
 - **Key**: PROJ-100
 - **Summary**: [from Jira]
@@ -127,10 +162,10 @@ PASS | FAIL — ready for Design Agent
 | Key | Summary | PRD ref | Action |
 |-----|---------|---------|--------|
 | PROJ-100 | Epic | — | Created / Existing |
-| PROJ-101 | Hall call UP | US-1 | Created |
+| PROJ-101 | User login flow | US-1 | Created |
 
 ## Handoff
-- [ ] Ready for Design Agent: PRD + Architecture + Jira stories
+- [ ] Ready for Design Agent: PRD + Architecture + Jira story keys
 ```
 
 ## Jira update (on PASS)
@@ -138,20 +173,25 @@ PASS | FAIL — ready for Design Agent
 ```
 Comment on epic PROJ-100:
   Planning Gate: PASS
-  PRD: docs/...
-  Architecture: docs/...
+  Wiki Overview: https://github.com/org/repo/wiki/Projects/.../Epics/PROJ-100/Overview
+  Wiki PRD: https://github.com/.../PRD
+  Wiki Architecture: https://github.com/.../Architecture
   Stories ready for design: PROJ-101, PROJ-102, ...
 ```
 
 ## Rules
 
-- **Create** epic and Must-have stories when missing — do not require pre-existing Jira issues
+- **Jira is mandatory** — create epic and Must-have stories when missing; do not run planning without Jira
 - Do not create stories for out-of-scope (non-goal) items in PRD
 - Do not duplicate stories — check epic children before creating
 - Do not write technical design — hand off to Design Agent
 - Do not transition to Ready for Dev
 - Follow [jira-integration.md](../jira-integration.md) for all Jira operations
+- Read `jira.project_key` from [project-config.yml](../../project-config.yml) or `JIRA_PROJECT_KEY`
+- Publish all documents to GitHub Wiki per [wiki-integration.md](../wiki-integration.md)
+- Jira comments must include wiki URLs — never repo-only paths
 - On FAIL, comment on epic with gaps; do not transition stories
+- Optional repo mirror per [report-persistence.md](../report-persistence.md)
 
 ## Handoff
 

@@ -13,12 +13,25 @@ Create or update pull requests once changes have been reviewed and tested. Ensur
 
 ## Prerequisites
 
-Before creating a PR, confirm:
+Before creating a PR, confirm prerequisites per [project-config.yml](../../project-config.yml) → `pipeline.mode`:
 
-- [ ] Review Agent report is APPROVED or APPROVED WITH COMMENTS (no 🔴 Critical items)
-- [ ] Unit Test Agent report shows PASS — or **N/A** if changes are config/docs only (see below)
-- [ ] Regression Test Agent report shows PASS or NOT RUN (skipped due to no CI link)
+### Dev mode (`mode: dev`)
+
+- [ ] Review Agent report is APPROVED or APPROVED WITH COMMENTS (no Critical items)
+- [ ] Unit Test Agent report shows PASS — or **N/A** for config/docs only
+- [ ] Regression Test Agent report shows PASS **or** NOT RUN
 - [ ] All commits are scoped to the intended changes
+
+### Strict mode (`mode: strict`) — enable after MCP + CI setup
+
+- [ ] Review Agent report is APPROVED or APPROVED WITH COMMENTS (no Critical items)
+- [ ] Unit Test Agent report shows PASS (or N/A for config/docs only)
+- [ ] Regression Test Agent report shows **PASS** (NOT RUN blocks PR)
+- [ ] Security Review Agent report shows PASS when `gates.security.mandatory_in_strict: true`
+- [ ] CI security job PASS when `security.ci.require_in_strict: true` (see Security Review report)
+- [ ] Integration Test Agent report shows PASS when API/DB boundaries changed
+- [ ] All commits are scoped to the intended changes
+- [ ] Agent reports published to **wiki** (URLs linked in PR body); repo mirror optional
 
 If prerequisites are not met, report what's blocking and do not open the PR.
 
@@ -51,7 +64,7 @@ In the PR body, note `Unit tests: N/A — config/docs only`. For any application
    - Title: concise, imperative mood (e.g., `Fix null pointer in UserService (#PROJ-123)`)
    - Body: summary, test evidence, linked issues
 
-4. **Create PR**
+4. **Push branch and create PR**
    ```bash
    git push -u origin HEAD
    gh pr create --title "..." --body "$(cat <<'EOF'
@@ -69,9 +82,14 @@ In the PR body, note `Unit tests: N/A — config/docs only`. For any application
    )"
    ```
 
-5. **Verify PR health**
-   - Check CI status on the PR: `gh pr checks <number>`
-   - Report PR URL and initial CI status
+5. **Verify CI on PR** (required in strict mode)
+   ```bash
+   gh pr checks <number> --watch
+   ```
+   - All required checks must **PASS**, including `ci-success`, `security`, `regression`
+   - If any check is pending, poll until complete (max 30 minutes) or report BLOCKED
+   - In **strict mode**: do not mark PR as merge-ready until `ci-success` PASS
+   - Report PR URL and final CI status
 
 6. **Update Jira** (when Jira story keys provided)
    - Follow [jira-integration.md](../jira-integration.md)
@@ -96,7 +114,14 @@ In the PR body, note `Unit tests: N/A — config/docs only`. For any application
 ## Review & Test Evidence
 - Review: APPROVED | APPROVED WITH COMMENTS
 - Unit tests: PASS (N tests) | N/A (config/docs only)
+- Integration tests: PASS | N/A
+- Security review: PASS | N/A
 - Regression: PASS | NOT RUN
+
+## Agent Reports (Wiki)
+- Planning: https://github.com/org/repo/wiki/.../Agent-Reports/planning-agent-...
+- Review: https://github.com/org/repo/wiki/.../Agent-Reports/review-agent-...
+- Unit tests: https://github.com/org/repo/wiki/.../Agent-Reports/unit-test-agent-...
 
 ## Test plan
 - [ ] Unit tests pass locally
@@ -137,6 +162,9 @@ When a PR already exists:
 - Do not push unless the user has approved commits (follow git safety protocol)
 - Return the PR URL when done
 - Update Jira when story keys provided — see [jira-integration.md](../jira-integration.md)
+- Persist report to GitHub Wiki per [wiki-integration.md](../wiki-integration.md)
+- PR body links **wiki URLs** for all agent reports and documents
+- In `strict` mode, block PR when regression is NOT RUN, security review FAIL, CI security job FAIL, or `gh pr checks` not all PASS
 
 ## Handoff
 

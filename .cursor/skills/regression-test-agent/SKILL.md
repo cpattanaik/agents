@@ -9,21 +9,30 @@ disable-model-invocation: true
 
 # Regression Test Agent
 
-Run pre-existing regression test suites through the CI pipeline. **Only activates when a CI pipeline link is provided** — otherwise skip and report as NOT RUN.
+Run pre-existing regression test suites through the CI pipeline. Behavior depends on [project-config.yml](../../project-config.yml).
 
 ## Activation
 
 | Condition | Action |
 |-----------|--------|
 | CI pipeline link provided | Fetch status, monitor run, produce report |
-| No CI link provided | Skip execution; report status as `NOT RUN — no CI link provided` |
+| No CI link + `auto_discover_ci: true` | Try `gh workflow list`, read `.github/workflows/`, trigger `gates.regression.ci_workflow` |
+| No CI link + `mode: strict` | Report **NOT RUN — blocked for strict mode**; PR Agent will reject |
+| No CI link + `mode: dev` | Skip execution; report status as `NOT RUN — dev mode skip` |
 
 ## Workflow
 
-1. **Check for CI link or trigger request**
+1. **Check for CI link or auto-discovery**
+   - Read [project-config.yml](../../project-config.yml):
+     - `pipeline.gates.regression` — `ci_workflow`, `ci_job`, `auto_discover_ci`
+     - `build.regression_command` — command CI runs (e.g. `./mvnw verify -Pregression`)
+     - `build.regression` — `profile`, `groups`, `includes` (suite metadata for report)
    - Look for a CI pipeline URL in the user message or session context
-   - Supported sources: GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure DevOps, or any URL the user labels as a CI pipeline link
-   - If absent → stop and output skip report (see template)
+   - If absent and `auto_discover_ci: true`:
+     - `gh workflow list` and match `ci_workflow` name (default: `ci`)
+     - Or inspect `.github/workflows/*.yml` for the primary CI workflow
+   - Supported sources: GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure DevOps
+   - If still absent → output skip/blocked report per mode (see Activation table)
 
 2. **Trigger or monitor**
    - **Existing run link provided** → monitor that run (go to step 3)
@@ -45,10 +54,13 @@ Run pre-existing regression test suites through the CI pipeline. **Only activate
 5. **Triage failures**
    - Categorize: code regression, environment/infra, flaky, unrelated to current changes
    - Map failures to test suites and source files when possible
+   - Include in report: `build.regression_command`, profile, groups from config
 
 6. **Produce report** using the template below
 
-7. **Update Jira** (when Jira story keys provided)
+7. **Persist report** — publish to wiki `.../Agent-Reports/regression-test-agent-{date}.md`
+
+8. **Update Jira** (when Jira story keys provided)
    - Follow [jira-integration.md](../jira-integration.md)
    - Comment with CI link, PASS/FAIL/PARTIAL/NOT RUN, failed suites
    - On FAIL: comment "Escalate to Bugfix Agent with Jira bug ticket"
@@ -95,6 +107,8 @@ gh run view <run-id> --repo org/repo --log-failed
 - **Status**: PASS | FAIL | PARTIAL | NOT RUN
 - **CI Link**: [url or "not provided"]
 - **Pipeline**: [name/id]
+- **Regression command**: [from project-config.yml → build.regression_command]
+- **Suite profile / groups**: [build.regression.profile / build.regression.groups]
 - **Duration**: Xs
 - **Suites**: N total | N passed | N failed
 
@@ -138,3 +152,4 @@ To run regression tests, provide a CI pipeline URL in your prompt.
 - If the CI link is invalid or inaccessible, report the error clearly
 - Hand off the report to the Review Agent; escalate blocking failures to the Bugfix Agent with Jira links if provided
 - Update Jira when story keys provided — see [jira-integration.md](../jira-integration.md)
+- Persist report per [report-persistence.md](../report-persistence.md)

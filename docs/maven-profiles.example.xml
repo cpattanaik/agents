@@ -1,0 +1,73 @@
+<!--
+  Spring Boot Maven snippets — merge into your app pom.xml.
+  See docs/TESTING.md for usage with the agent pipeline.
+-->
+
+<!-- ========== OWASP dependency-check (CI security job) ========== -->
+<plugin>
+  <groupId>org.owasp</groupId>
+  <artifactId>dependency-check-maven</artifactId>
+  <version>11.1.0</version>
+  <configuration>
+    <failBuildOnCVSS>7</failBuildOnCVSS>
+  </configuration>
+</plugin>
+
+<!-- ========== Surefire — unit tests (*Test.java) ========== -->
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-surefire-plugin</artifactId>
+  <configuration>
+    <excludes>
+      <exclude>**/*IT.java</exclude>
+    </excludes>
+  </configuration>
+</plugin>
+
+<!-- ========== Failsafe — integration + regression (*IT.java, @Tag) ========== -->
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-failsafe-plugin</artifactId>
+  <executions>
+    <execution>
+      <goals>
+        <goal>integration-test</goal>
+        <goal>verify</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+
+<!-- ========== Profiles (match project-config.yml -P flags) ========== -->
+<!--
+<profiles>
+  <profile>
+    <id>integration</id>
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <configuration>
+            <groups>integration</groups>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
+  </profile>
+  <profile>
+    <id>regression</id>
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <configuration>
+            <groups>regression</groups>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
+  </profile>
+</profiles>
+-->

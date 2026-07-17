@@ -13,16 +13,26 @@ Transform planning artifacts into an implementation-ready technical design docum
 
 ## Prerequisites
 
-- Planning Agent report is **PASS** (or user explicitly skips planning validation)
-- PRD, architecture doc, and Jira story keys provided
+One of the following must be true:
+
+1. **Planning PASS report on wiki** — verify per [report-persistence.md](../report-persistence.md) → *Verify prior gate reports*:
+   - Read latest `planning-agent-*.md` from wiki `.../Agent-Reports/` (or Jira epic comment `Wiki Report:` URL)
+   - Frontmatter `status: PASS` required
+2. **Audited skip** — user provides `SKIP_PLANNING_GATE` and **approver name/email** in the prompt (record in design report header)
+
+Silent skip is not allowed when `project-config.yml` → `pipeline.mode: strict`.
+
+- PRD, architecture doc, and Jira story keys provided (from Planning Agent)
+- Wiki epic folder exists (from Planning Agent) — read PRD/Architecture from wiki or user input
 
 ## Inputs
 
 | Input | Required |
 |-------|----------|
-| PRD | Yes — path or content |
-| Architecture document | Yes — path or content |
+| PRD | Yes — wiki path or content |
+| Architecture document | Yes — wiki path or content |
 | Jira story keys | Yes — e.g. `PROJ-101`, `PROJ-102` |
+| Project config | [project-config.yml](../../project-config.yml) |
 | Existing Cursor rules | Read `.cursor/rules/` for project conventions |
 
 ## Workflow
@@ -52,15 +62,16 @@ Transform planning artifacts into an implementation-ready technical design docum
 |----------|-------|----|----------------|-----|-----------|
 | PROJ-101 | US-1 | FR-5 | Dispatch | POST /api/... | XxxService |
 
-5. **Write design doc** to `docs/<feature>-design.md` (or user-specified path)
+5. **Write design doc** — publish to GitHub Wiki at `Projects/{slug}/Epics/{EPIC-KEY}/Technical-Design` (not repo `docs/` unless mirror enabled)
 
 6. **Produce design report** (template below)
 
-7. **Update Jira**
-   - Comment on each story with design section link
-   - Comment on epic with design doc URL and traceability summary
-   - Transition design task → **Done** (if design task key provided)
-   - Transition stories → **Ready for Dev** (only after user or Review Agent approves design — default: comment only, transition after review)
+7. **Publish report to wiki** → `.../Agent-Reports/design-agent-{date}.md`
+
+8. **Update Jira**
+   - Comment on each story with wiki URL to Technical-Design + design report
+   - Comment on epic with design wiki URL and traceability summary
+   - **Do not** transition stories to Ready for Dev — only **Review Agent** may do that after design approval
 
 ## Design doc structure
 
@@ -90,7 +101,7 @@ Transform planning artifacts into an implementation-ready technical design docum
 COMPLETE — technical design ready for review
 
 ## Design doc
-- **Path**: docs/...
+- **Wiki**: https://github.com/org/repo/wiki/Projects/.../Epics/PROJ-100/Technical-Design
 - **Sections**: N
 
 ## Traceability
@@ -107,12 +118,13 @@ COMPLETE — technical design ready for review
 ```
 Comment on PROJ-101:
   Design Agent: COMPLETE
-  Design section: docs/...#dispatch-algorithm
-  Components: LiftDispatchService, LiftEngine
-  APIs: POST /api/v1/requests/hall-call
+  Wiki Design: https://github.com/.../Technical-Design
+  Wiki Report: https://github.com/.../Agent-Reports/design-agent-20260716
+  Components: XxxService, YyyEngine
+  APIs: POST /api/v1/...
 
 Comment on epic:
-  Technical design: docs/...
+  Wiki Technical Design: https://github.com/.../Technical-Design
   Traceability: 8/8 stories mapped
   Next: Design review → Coding Agent
 ```
@@ -123,9 +135,11 @@ Comment on epic:
 - Flag ambiguities — do not guess silently
 - Do not write production code — hand off to Coding Agent after design review
 - Follow [jira-integration.md](../jira-integration.md)
-- Default: comment on Jira; transition to Ready for Dev only after Review Agent approves design
+- **Never** transition stories to Ready for Dev — hand off to Review Agent for design approval and transition
+- Publish design and reports to GitHub Wiki per [wiki-integration.md](../wiki-integration.md)
+- Jira comments must include wiki URLs
 
 ## Handoff
 
 1. **Review Agent** — review design doc
-2. On approval → **Coding Agent** with design doc path + Jira story keys
+2. On approval → **Coding Agent** with wiki Technical-Design URL + Jira story keys

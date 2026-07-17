@@ -21,9 +21,10 @@ Implement features per approved technical design and linked Jira stories.
 
 | Input | Required |
 |-------|----------|
-| Technical design doc | Yes — path |
+| Technical design doc | Yes — wiki URL or path under `.../Technical-Design` |
 | Jira story keys | Yes — stories being implemented |
 | Traceability matrix | From design doc — which components/APIs to build |
+| Project config | [project-config.yml](../../project-config.yml) — `build.compile_command` when `build.tool: maven` |
 
 ## Workflow
 
@@ -32,8 +33,8 @@ Implement features per approved technical design and linked Jira stories.
    - Confirm stories are **Ready for Dev** (or warn if not)
 
 2. **Update Jira — start**
-   - Transition each story → **In Progress**
-   - Comment: `Coding Agent: started — implementing per docs/...`
+   - When `jira.transitions.story_to_in_progress` is set → transition each story **In Progress**; otherwise comment only
+   - Comment: `Coding Agent: started — see wiki Technical-Design link on epic/story`
 
 3. **Read design doc**
    - Identify components, APIs, domain model for the assigned stories
@@ -52,14 +53,16 @@ Implement features per approved technical design and linked Jira stories.
    - Match existing code style
 
 6. **Verify build compiles**
-   - Run `./mvnw compile` or `./gradlew build -x test` as appropriate
+   - Run `build.compile_command` (default: `./mvnw -B compile`)
    - Fix compilation errors within scope
 
 7. **Produce coding report** (template below)
 
-8. **Update Jira — complete**
+8. **Persist report** — publish to wiki `.../Agent-Reports/coding-agent-{date}.md`
+
+9. **Update Jira — complete**
    - Comment on each story with files changed and summary
-   - Transition story → **In Review** (code complete, pending test/review)
+   - When `jira.transitions.story_to_in_review` is set → transition story **In Review**; otherwise comment only
    - Do not mark Done — PR Agent handles after merge
 
 ## Report Template
@@ -73,7 +76,7 @@ COMPLETE | PARTIAL | BLOCKED
 ## Jira stories implemented
 | Key | Summary | Status |
 |-----|---------|--------|
-| PROJ-101 | Hall call | COMPLETE |
+| PROJ-101 | User authentication | COMPLETE |
 
 ## Files changed
 | File | Change |
@@ -87,6 +90,7 @@ COMPLETE | PARTIAL | BLOCKED
 
 ## Build status
 - Compile: PASS | FAIL
+- Unit tests (changed modules): PASS | NOT RUN — handoff to Unit Test Agent
 
 ## Notes
 - [Deviations from design, blockers]
@@ -97,12 +101,12 @@ COMPLETE | PARTIAL | BLOCKED
 ```
 # On start
 Transition PROJ-101 → In Progress
-Comment: Coding Agent started. Design: docs/...
+Comment: Coding Agent started. Wiki Design: https://github.com/.../Technical-Design
 
 # On complete
 Comment on PROJ-101:
   Coding Agent: COMPLETE
-  Files: src/.../LiftDispatchService.java, ...
+  Wiki Report: https://github.com/.../Agent-Reports/coding-agent-20260716
   Build: PASS
   Next: Unit Test Agent → Review Agent
 Transition PROJ-101 → In Review
@@ -115,13 +119,16 @@ Transition PROJ-101 → In Review
 - Do not mark Jira Done — only In Review
 - Follow [jira-integration.md](../jira-integration.md)
 - Hand off to **Unit Test Agent** and **Review Agent** when complete
+- Persist report to GitHub Wiki per [wiki-integration.md](../wiki-integration.md)
 
 ## Handoff
 
 ```
 Coding Agent (done)
   → Unit Test Agent (generate + run tests)
-  → Review Agent (code + test report review)
-  → Regression Test Agent (if CI link provided)
+  → Integration Test Agent (when API/DB boundaries changed)
+  → Review Agent (code scope)
+  → Security Review Agent (strict mode)
+  → Regression Test Agent
   → PR Agent
 ```

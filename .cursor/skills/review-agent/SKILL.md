@@ -12,7 +12,17 @@ disable-model-invocation: true
 
 Review all artifacts produced during planning, coding, testing, and bugfix phases. Produce a structured review report with actionable findings.
 
-## Scope
+## Review scopes
+
+Invoke with explicit scope in the user prompt (default: infer from artifacts):
+
+| Scope | Focus | Jira transition |
+|-------|-------|-----------------|
+| `design` | PRD, architecture, technical design, API contracts, threat model | On APPROVED (no Critical): transition stories → **Ready for Dev** |
+| `code` | Source changes, security, error handling, conventions | Comment only |
+| `tests` | Unit, integration, regression reports | Comment only |
+| `bugfix` | Fix correctness, root cause, regression risk | Comment only |
+| `pipeline` | Agent SKILL files, rules, handoffs | Comment only |
 
 Review these inputs when available:
 
@@ -58,11 +68,14 @@ Review these inputs when available:
 
 6. **Produce report** using the template below
 
-7. **Update Jira** (when Jira story/ticket keys provided)
+7. **Persist report** — publish to GitHub Wiki `.../Agent-Reports/review-agent-{date}.md` per [wiki-integration.md](../wiki-integration.md)
+
+8. **Update Jira** (when Jira story/ticket keys provided)
+   - Comment with **wiki URL** to report (required)
    - Follow [jira-integration.md](../jira-integration.md)
-   - Comment on each linked issue with review summary and verdict
-   - For design review PASS with no Critical items: comment "Ready for Coding Agent"
-   - Do not transition issues — comment only unless user asks to block story
+   - Comment on each linked issue with review summary, verdict, and report path
+   - **Design scope only:** on APPROVED or APPROVED WITH COMMENTS (no Critical items), when `jira.transitions.story_to_ready_for_dev` is set → transition stories **Ready for Dev**; otherwise comment only with approval note
+   - **Code/tests/bugfix scope:** comment only — do not transition
 
 ### Jira comment format
 

@@ -18,12 +18,8 @@ Generate unit tests for new or changed code, execute them, and produce a structu
    - Map each change to the classes/methods that need test coverage
 
 2. **Detect project type**
-   - Inspect build files and source layout to determine stack:
-     - **Java/Spring Boot**: `pom.xml` or `build.gradle` + `src/test/java` → follow `.cursor/rules/springboot.mdc`
-     - **Kotlin/Spring Boot**: `build.gradle.kts` + `src/test/kotlin`
-     - **Node/TypeScript**: `package.json` + `jest`/`vitest`/`mocha` config
-     - **Python**: `pyproject.toml`/`requirements.txt` + `pytest`/`unittest`
-     - **Other**: match the framework already used in the project's test directory
+   - Read [project-config.yml](../../project-config.yml) → `build.tool` (must be `maven` for bundled CI)
+   - **Spring Boot + Maven**: `pom.xml` + `src/test/java` → follow `.cursor/rules/springboot.mdc`
 
 3. **Analyze existing tests**
    - Find the project's test directory and match existing style, frameworks, and naming
@@ -35,10 +31,8 @@ Generate unit tests for new or changed code, execute them, and produce a structu
    - Follow project rules in `.cursor/rules/` when applicable
 
 5. **Run tests**
-   - Java/Maven: `./mvnw test -pl <module> -Dtest=<TestClass>` or `./mvnw test`
-   - Java/Gradle: `./gradlew test` or `./gradlew test --tests <TestClass>`
-   - Node: `npm test` or `npx vitest run` / `npx jest`
-   - Python: `pytest` or `python -m unittest`
+   - Run `build.test_command` (default: `./mvnw -B test`)
+   - See [docs/TESTING.md](../../docs/TESTING.md)
    - Capture stdout, stderr, pass/fail counts, and duration
 
 6. **Fix failing tests** (only tests you generated or that fail due to your changes)
@@ -48,7 +42,13 @@ Generate unit tests for new or changed code, execute them, and produce a structu
 
 7. **Produce report** using the template below
 
-8. **Update Jira** (when Jira story keys provided)
+8. **Enforce coverage threshold** (when `project-config.yml` → `pipeline.gates.unit_tests.enforce_threshold_in_strict: true`)
+   - Read `coverage_threshold_percent` (default 80)
+   - If measurable and below threshold → report status **FAIL**
+
+9. **Persist report** — publish to wiki `.../Agent-Reports/unit-test-agent-{date}.md`
+
+10. **Update Jira** (when Jira story keys provided)
    - Follow [jira-integration.md](../jira-integration.md)
    - Comment on each story: status PASS/FAIL, tests run, failures
    - Comment only — do not transition issues
@@ -61,10 +61,6 @@ Generate unit tests for new or changed code, execute them, and produce a structu
 ```
 
 ## Test Generation Guidelines
-
-### Non-Java projects
-
-When the project is not Java/Spring Boot, match the existing test framework and conventions found in the repo. Do not impose Spring Boot patterns on non-Java code.
 
 ### Spring Boot (JUnit 5 + Mockito)
 
@@ -135,6 +131,7 @@ class UserServiceTest {
 
 - Only add tests; do not refactor unrelated production code
 - Run tests locally — do not assume pass without execution
-- If the test framework is unknown, inspect `pom.xml` or `build.gradle` first
+- Inspect `pom.xml` and existing tests under `src/test/java` before generating new tests
 - Hand off the report to the Review Agent when complete
 - Update Jira when story keys provided — see [jira-integration.md](../jira-integration.md)
+- Persist report to GitHub Wiki per [wiki-integration.md](../wiki-integration.md)
