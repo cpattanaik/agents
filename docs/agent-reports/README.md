@@ -37,7 +37,8 @@ wiki_url: https://github.com/.../wiki/.../Agent-Reports/planning-agent-20260716
 | Architecture | `.../Epics/{EPIC-KEY}/Architecture` |
 | Technical design | `.../Epics/{EPIC-KEY}/Technical-Design` |
 | Agent reports | `.../Epics/{EPIC-KEY}/Agent-Reports/` |
-| Story detail | `.../Epics/{EPIC-KEY}/Stories/{STORY-KEY}-slug` |
+
+Story details (user story, AC, DoD) are in **Jira only** — not wiki pages.
 
 ## Optional repo mirror
 

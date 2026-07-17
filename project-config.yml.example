@@ -50,7 +50,7 @@ wiki:
     architecture: Architecture
     technical_design: Technical-Design
     agent_reports: Agent-Reports
-    stories: Stories
+    # stories: reserved — story details live in Jira, not wiki
 
 pipeline:
   mode: dev                         # dev = initial setup (MCP/Jira optional); strict = corporate gates

@@ -17,12 +17,8 @@
       }
     },
     "github-wiki": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "--package=github:andreahaku/github_wiki_mcp",
-        "github-wiki-mcp"
-      ],
+      "command": "bash",
+      "args": ["scripts/run-github-wiki-mcp.sh"],
       "env": {
         "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
       }

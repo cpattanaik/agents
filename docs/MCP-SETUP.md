@@ -37,10 +37,19 @@ cp .cursor/mcp.json.example .cursor/mcp.json
 
 Restart Cursor → **Settings → MCP** → verify `atlassian`, `github`, `github-wiki` are green.
 
-**Note:** `github-wiki-mcp` is **not published to npm**. The example installs it from GitHub:
+**github-wiki** is **vendored** in this repo (upstream `npx` install fails without `pnpm`):
 
 ```json
-"args": ["-y", "--package=github:andreahaku/github_wiki_mcp", "github-wiki-mcp"]
+"command": "bash",
+"args": ["scripts/run-github-wiki-mcp.sh"]
+```
+
+The wrapper installs dependencies on first run, then starts `.cursor/mcp-servers/github-wiki-mcp/dist/index.js`.
+
+After updating `src/` under `.cursor/mcp-servers/github-wiki-mcp/`, rebuild:
+
+```bash
+./scripts/setup-mcp-servers.sh
 ```
 
 This server provides `write_wiki_page`, `read_wiki_page`, `list_wiki_pages`, etc. — used by planning and design agents.
@@ -95,9 +104,9 @@ Projects/<project-slug>/Epics/<EPIC-KEY>/
 ├── Technical-Design
 ├── Agent-Reports/
 │   └── planning-agent-20260716.md
-└── Stories/
-    └── <STORY-KEY>-user-story-slug
 ```
+
+Story details (user story, AC) are in **Jira only** — Planning Agent does not create `Stories/` wiki pages.
 
 Example with `slug: my-project`, epic `PROJ-100`:
 
@@ -127,7 +136,8 @@ Then `@design-agent`, etc. — each publishes to wiki and updates Jira with link
 | Issue | Fix |
 |-------|-----|
 | No MCP servers | Create `.cursor/mcp.json`, set env vars, restart |
-| `github-wiki-mcp` npm 404 | Package is not on npm — use `--package=github:andreahaku/github_wiki_mcp` (see `.cursor/mcp.json.example`) |
+| `github-wiki-mcp` npm 404 / Connection closed | Upstream needs `pnpm` on install — use vendored `.cursor/mcp-servers/github-wiki-mcp/dist/index.js` (see `.cursor/mcp.json.example`) |
+| `MODULE_NOT_FOUND` … `mcp-servers/.../dist/index.js` | Run `./scripts/setup-mcp-servers.sh` to build vendored server |
 | `@modelcontextprotocol/server-atlassian` 404 | Use `mcp-atlassian` instead; map `ATLASSIAN_BASE_URL` from `ATLASSIAN_URL` |
 | Wiki write fails | Enable wiki on repo; check `GITHUB_TOKEN` has `repo` scope |
 | Jira 401 | Verify `ATLASSIAN_*` env vars |

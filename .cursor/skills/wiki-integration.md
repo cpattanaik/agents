@@ -18,10 +18,10 @@ flowchart LR
         Arch[Architecture]
         Design[Technical-Design]
         Reports[Agent-Reports]
-        StoryPages[Stories/PROJ-101]
     end
     Epic -->|comments wiki URLs| EpicPages
-    Story1 -->|comments wiki URLs| StoryPages
+    Story1 -->|AC, summary, status| Epic
+    Story2 -->|AC, summary, status| Epic
     EpicPages --> PRD
     EpicPages --> Arch
     EpicPages --> Design
@@ -30,8 +30,8 @@ flowchart LR
 
 | System | Stores | Does not store |
 |--------|--------|----------------|
-| **GitHub Wiki** | PRD, architecture, design, agent reports, story detail pages | Issue workflow state |
-| **Jira** | Epic, stories, status, assignee, AC summary | Full document bodies |
+| **GitHub Wiki** | PRD, architecture, design, agent reports | Issue workflow state, per-story detail pages |
+| **Jira** | Epic, stories, status, assignee, AC, user story text | Full document bodies (PRD, design) |
 
 ## Configuration
 
@@ -63,14 +63,9 @@ Projects/<project-slug>/
     │   ├── design-agent-20260716.md
     │   ├── review-agent-20260716.md
     │   └── ...
-    └── Stories/
-        ├── <STORY-KEY>-<slug>        # e.g. PROJ-101-user-story-slug
-        └── ...
 ```
 
-**Page path rule:** `Projects/{slug}/Epics/{EPIC-KEY}/{page}`
-
-Wiki page names use hyphens (GitHub Wiki convention). Story pages: `{STORY-KEY}-{short-slug}`.
+Per-story wiki pages under `Stories/` are **not** created by Planning Agent — story details stay in Jira.
 
 ## Wiki URL format
 
@@ -115,16 +110,18 @@ Every agent comment on Jira must include wiki links:
 | Architecture | `.../Epics/{KEY}/Architecture` | Epic + all stories |
 | Technical design | `.../Epics/{KEY}/Technical-Design` | Epic + related stories |
 | Agent report | `.../Epics/{KEY}/Agent-Reports/{agent}-{date}` | Epic or story |
-| Story detail | `.../Epics/{KEY}/Stories/{STORY-KEY}-slug` | That story only |
+
+Story details (user story, AC, DoD) are stored in **Jira only** — Planning Agent does not create wiki pages under `Stories/`.
 
 ### Jira description update (on create)
 
-When Planning Agent creates a story, set description to include:
+When Planning Agent creates a story, set description to include epic wiki links and full story text in Jira:
 
 ```markdown
 ## Wiki
-- Epic docs: https://github.com/.../wiki/Projects/.../Epics/PROJ-100/Overview
-- Story page: https://github.com/.../wiki/Projects/.../Epics/PROJ-100/Stories/PROJ-101-user-story-slug
+- Epic: https://github.com/.../wiki/Projects/.../Epics/PROJ-100/Overview
+- PRD: https://github.com/.../wiki/Projects/.../Epics/PROJ-100/PRD
+- Architecture: https://github.com/.../wiki/Projects/.../Epics/PROJ-100/Architecture
 
 ## User story
 ...
@@ -132,12 +129,12 @@ When Planning Agent creates a story, set description to include:
 
 ## Planning Agent specifics
 
-1. Create Jira epic + stories
+1. Create Jira epic + stories (story details in Jira description)
 2. Create wiki epic folder: `Projects/{slug}/Epics/{EPIC-KEY}/Overview`
 3. Publish PRD → `.../PRD`
 4. Publish Architecture → `.../Architecture`
 5. Comment epic with Overview, PRD, Architecture wiki URLs
-6. Comment each story with Overview + story wiki page URL (create stub story page)
+6. Comment each story with epic wiki URLs (PRD, Architecture, Overview) — **no** per-story wiki pages
 
 ## Design Agent specifics
 

@@ -193,7 +193,8 @@ Jira stores **links only** — full documents live in GitHub Wiki.
 | Architecture | `.../Epics/{KEY}/Architecture` | Comment wiki URL on epic + stories |
 | Tech design | `.../Epics/{KEY}/Technical-Design` | Comment wiki URL on epic + stories |
 | Agent report | `.../Epics/{KEY}/Agent-Reports/{agent}-{date}` | Comment wiki URL on story/epic |
-| Story detail | `.../Epics/{KEY}/Stories/{STORY-KEY}-slug` | Set in story description on create |
+
+Story details live in **Jira** (description, AC, DoD) — Planning Agent does not create wiki pages under `Stories/`.
 | PR | GitHub PR URL | Comment on story |
 | CI run | Actions run URL | Comment on story |
 

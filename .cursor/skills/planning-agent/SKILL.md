@@ -68,7 +68,7 @@ If GitHub Wiki MCP is not configured:
 
 6. **Publish PRD and Architecture** via `github-wiki` MCP (`write_wiki_page`)
 
-7. **Create story stub pages** under `.../Stories/{STORY-KEY}-{slug}` (one page per Jira story)
+Do **not** create wiki pages under `Stories/` — story details (user story, AC, DoD) live in **Jira only**. Wiki holds epic-level documents (Overview, PRD, Architecture, agent reports).
 
 ### C. Validate and cross-check
 
@@ -83,7 +83,7 @@ If GitHub Wiki MCP is not configured:
     - Every Must-have PRD story has a Jira story
     - Every Jira story maps to a PRD user story or FR
     - Blocked-by dependencies documented
-    - Every Jira story description includes wiki links (epic Overview, story page, PRD, Architecture)
+    - Every Jira story description includes wiki links to epic docs (Overview, PRD, Architecture) — not per-story wiki pages
 
 12. **Produce planning gate report**
 
@@ -91,7 +91,7 @@ If GitHub Wiki MCP is not configured:
 
 14. **Update Jira** — on PASS:
     - Comment on epic with wiki URLs: Overview, PRD, Architecture, planning report
-    - Comment on each story with wiki URLs: PRD, Architecture, story page, epic Overview
+    - Comment on each story with wiki URLs: PRD, Architecture, epic Overview (no story wiki page)
     - Transition stories to **Refined** only when `jira.transitions.story_to_refined` is set (non-null); otherwise comment only — see [jira-integration.md](../jira-integration.md)
 
 ## Story creation template (Jira description)
@@ -103,7 +103,7 @@ As a [persona], I [action] so that [benefit].
 ## Wiki
 - Epic: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/Overview
 - PRD: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/PRD
-- Story: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/Stories/{STORY-KEY}-slug
+- Architecture: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/Architecture
 
 ## PRD reference
 US-X | FR-1, FR-2
@@ -182,6 +182,7 @@ Comment on epic PROJ-100:
 ## Rules
 
 - **Jira is mandatory** — create epic and Must-have stories when missing; do not run planning without Jira
+- **Do not create wiki story pages** — keep story details in Jira; wiki gets PRD, Architecture, Overview, and agent reports only
 - Do not create stories for out-of-scope (non-goal) items in PRD
 - Do not duplicate stories — check epic children before creating
 - Do not write technical design — hand off to Design Agent

@@ -3,3 +3,6 @@ project-config.yml
 
 # Local MCP credentials
 .cursor/mcp.json
+
+# Vendored MCP server dependencies (dist/ is committed)
+.cursor/mcp-servers/**/node_modules
