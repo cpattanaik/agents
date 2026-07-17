@@ -144,7 +144,8 @@ Then `@design-agent`, etc. — each publishes to wiki and updates Jira with link
 | No MCP servers | Create `.cursor/mcp.json`, set env vars, restart |
 | `github-wiki-mcp` npm 404 / Connection closed | Use vendored `scripts/run-github-wiki-mcp.sh` (see `.cursor/mcp.json.example`) |
 | `mcp-atlassian` / atlassian Connection closed | Use vendored `scripts/run-atlassian-mcp.sh` — not `npx` or missing local `dist/` |
-| `MODULE_NOT_FOUND` … `mcp-servers/.../dist/index.js` | Run `./scripts/setup-mcp-servers.sh` |
+| `MODULE_NOT_FOUND` … `mcp-servers/.../dist/index.js` | Do **not** point `mcp.json` at `node …/dist/index.js` — use wrapper scripts; or run `./scripts/setup-mcp-servers.sh` |
+| `Cannot find module` (e.g. `@modelcontextprotocol/sdk`, `jsdom`) | Wrappers run `npm ci` on first start — copy config from `.cursor/mcp.json.example` |
 | `@modelcontextprotocol/server-atlassian` 404 | Removed — use vendored `mcp-atlassian` via `scripts/run-atlassian-mcp.sh` |
 | Wiki write fails | Enable wiki on repo; check `GITHUB_TOKEN` has `repo` scope |
 | Jira 401 | Verify `ATLASSIAN_*` env vars |
