@@ -120,15 +120,13 @@ Copy this **bundle** into your **application repository** (not just the agents t
 # From the agents template repo root:
 APP=/path/to/your-app
 
-mkdir -p "$APP/.cursor/skills" "$APP/.github/workflows" "$APP/.github/scripts"
+mkdir -p "$APP/.github/workflows" "$APP/.github/scripts"
 
-cp -R .cursor/skills/*     "$APP/.cursor/skills/"
-cp -R .cursor/rules/*      "$APP/.cursor/rules/" 2>/dev/null || true
+cp -R .cursor "$APP/.cursor"
 cp project-config.yml.example "$APP/project-config.yml"
 cp docs/maven-profiles.example.xml "$APP/docs/" 2>/dev/null || true
 cp .github/workflows/ci.yml "$APP/.github/workflows/ci.yml"
 cp .github/scripts/load-project-config.py "$APP/.github/scripts/"
-cp .cursor/mcp.json.example "$APP/.cursor/mcp.json"  # optional; configure env vars
 ```
 
 Then edit `$APP/project-config.yml` (`project`, `github`, `jira`, `build`, `security`).
@@ -139,7 +137,7 @@ Then edit `$APP/project-config.yml` (`project`, `github`, `jira`, `build`, `secu
 |------|--------|--------------------------|
 | 1 | Copy bundle above into app repo | Yes |
 | 2 | Edit `project-config.yml` (`pipeline.mode: dev` is default) | Yes |
-| 3 | Configure Jira + Wiki MCP — [MCP-SETUP.md](../docs/MCP-SETUP.md) (**required before `@planning-agent`**) | Yes |
+| 3 | Set shell env vars + restart Cursor MCP — [MCP-SETUP.md](../docs/MCP-SETUP.md) (included in `cp -R .cursor`; **required before `@planning-agent`**) | Yes |
 | 4 | Enable GitHub Wiki on app repo | Yes |
 | 5 | Set Jira transition IDs in `jira.transitions` (null = comment only until set) | Recommended |
 | 6 | Add `pom.xml` profiles + OWASP plugin — [TESTING.md](../docs/TESTING.md) | Yes (Maven) |

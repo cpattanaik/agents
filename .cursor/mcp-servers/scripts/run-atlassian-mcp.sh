@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Start vendored mcp-atlassian MCP (installs deps on first run).
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DIR="$ROOT/.cursor/mcp-servers/mcp-atlassian"
+MCP_SERVERS="$(cd "$(dirname "$0")/.." && pwd)"
+DIR="$MCP_SERVERS/mcp-atlassian"
 cd "$DIR"
 if [[ ! -d node_modules ]]; then
   npm ci --omit=dev 2>/dev/null || npm install --omit=dev

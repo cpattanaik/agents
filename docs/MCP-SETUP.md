@@ -29,11 +29,23 @@ GitHub PAT: Settings → Developer settings → PAT → `repo` scope.
 
 ## 2. MCP configuration
 
-Copy [`.cursor/mcp.json.example`](../.cursor/mcp.json.example) to `.cursor/mcp.json`:
+MCP config ships in `.cursor/mcp.json` (env var references only — **never put tokens in this file**).
+
+**New app repo:** copy the whole `.cursor` folder — no MCP file edits needed:
 
 ```bash
-cp .cursor/mcp.json.example .cursor/mcp.json
+cp -R /path/to/agents/.cursor /path/to/your-app/.cursor
 ```
+
+**This repo:** `.cursor/mcp.json` is already present. Set env vars (section 1) and restart Cursor.
+
+### Prerequisites
+
+| Requirement | Used by |
+|-------------|---------|
+| Node.js + npm | Vendored server wrappers (first-start `npm ci`) |
+| Network (first start) | `npm ci` for atlassian/github-wiki; `npx` for github server |
+| Shell env vars | `ATLASSIAN_*`, `GITHUB_TOKEN` — see section 1 |
 
 Restart Cursor → **Settings → MCP** → verify `atlassian`, `github`, `github-wiki` are green.
 
@@ -42,20 +54,24 @@ Restart Cursor → **Settings → MCP** → verify `atlassian`, `github`, `githu
 ```json
 "atlassian": {
   "command": "bash",
-  "args": ["scripts/run-atlassian-mcp.sh"]
+  "args": ["${workspaceFolder}/.cursor/mcp-servers/scripts/run-atlassian-mcp.sh"],
+  "cwd": "${workspaceFolder}"
 },
 "github-wiki": {
   "command": "bash",
-  "args": ["scripts/run-github-wiki-mcp.sh"]
+  "args": ["${workspaceFolder}/.cursor/mcp-servers/scripts/run-github-wiki-mcp.sh"],
+  "cwd": "${workspaceFolder}"
 }
 ```
+
+`${workspaceFolder}` resolves to the project root (where `.cursor/mcp.json` lives) so the same config works in any repo after copy.
 
 Wrappers install production dependencies on first run, then start the local `dist/index.js` for each server.
 
 After updating vendored `src/` (github-wiki only), refresh:
 
 ```bash
-./scripts/setup-mcp-servers.sh
+./.cursor/mcp-servers/scripts/setup-mcp-servers.sh
 ```
 
 This server provides `write_wiki_page`, `read_wiki_page`, `list_wiki_pages`, etc. — used by planning and design agents.
@@ -141,12 +157,12 @@ Then `@design-agent`, etc. — each publishes to wiki and updates Jira with link
 
 | Issue | Fix |
 |-------|-----|
-| No MCP servers | Create `.cursor/mcp.json`, set env vars, restart |
-| `github-wiki-mcp` npm 404 / Connection closed | Use vendored `scripts/run-github-wiki-mcp.sh` (see `.cursor/mcp.json.example`) |
-| `mcp-atlassian` / atlassian Connection closed | Use vendored `scripts/run-atlassian-mcp.sh` — not `npx` or missing local `dist/` |
-| `MODULE_NOT_FOUND` … `mcp-servers/.../dist/index.js` | Do **not** point `mcp.json` at `node …/dist/index.js` — use wrapper scripts; or run `./scripts/setup-mcp-servers.sh` |
-| `Cannot find module` (e.g. `@modelcontextprotocol/sdk`, `jsdom`) | Wrappers run `npm ci` on first start — copy config from `.cursor/mcp.json.example` |
-| `@modelcontextprotocol/server-atlassian` 404 | Removed — use vendored `mcp-atlassian` via `scripts/run-atlassian-mcp.sh` |
+| No MCP servers | Copy `.cursor` folder (includes `mcp.json`); set env vars; restart |
+| `github-wiki-mcp` npm 404 / Connection closed | Use vendored `.cursor/mcp-servers/scripts/run-github-wiki-mcp.sh` (see `.cursor/mcp.json`) |
+| `mcp-atlassian` / atlassian Connection closed | Use vendored `.cursor/mcp-servers/scripts/run-atlassian-mcp.sh` — not `npx` or missing local `dist/` |
+| `MODULE_NOT_FOUND` … `mcp-servers/.../dist/index.js` | Do **not** point `mcp.json` at `node …/dist/index.js` — use wrapper scripts; or run `./.cursor/mcp-servers/scripts/setup-mcp-servers.sh` |
+| `Cannot find module` (e.g. `@modelcontextprotocol/sdk`, `jsdom`) | Wrappers run `npm ci` on first start — ensure `.cursor/mcp-servers/` was copied with `.cursor` |
+| `@modelcontextprotocol/server-atlassian` 404 | Removed — use vendored `mcp-atlassian` via `.cursor/mcp-servers/scripts/run-atlassian-mcp.sh` |
 | Wiki write fails | Enable wiki on repo; check `GITHUB_TOKEN` has `repo` scope |
 | Jira 401 | Verify `ATLASSIAN_*` env vars |
 | Wrong wiki path | Check `project-config.yml` → `project.slug` and `jira.epic_key` |
