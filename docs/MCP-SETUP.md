@@ -37,6 +37,14 @@ cp .cursor/mcp.json.example .cursor/mcp.json
 
 Restart Cursor → **Settings → MCP** → verify `atlassian`, `github`, `github-wiki` are green.
 
+**Note:** `github-wiki-mcp` is **not published to npm**. The example installs it from GitHub:
+
+```json
+"args": ["-y", "--package=github:andreahaku/github_wiki_mcp", "github-wiki-mcp"]
+```
+
+This server provides `write_wiki_page`, `read_wiki_page`, `list_wiki_pages`, etc. — used by planning and design agents.
+
 ## 3. Project configuration
 
 ```bash
@@ -119,6 +127,8 @@ Then `@design-agent`, etc. — each publishes to wiki and updates Jira with link
 | Issue | Fix |
 |-------|-----|
 | No MCP servers | Create `.cursor/mcp.json`, set env vars, restart |
+| `github-wiki-mcp` npm 404 | Package is not on npm — use `--package=github:andreahaku/github_wiki_mcp` (see `.cursor/mcp.json.example`) |
+| `@modelcontextprotocol/server-atlassian` 404 | Use `mcp-atlassian` instead; map `ATLASSIAN_BASE_URL` from `ATLASSIAN_URL` |
 | Wiki write fails | Enable wiki on repo; check `GITHUB_TOKEN` has `repo` scope |
 | Jira 401 | Verify `ATLASSIAN_*` env vars |
 | Wrong wiki path | Check `project-config.yml` → `project.slug` and `jira.epic_key` |
