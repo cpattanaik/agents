@@ -37,16 +37,22 @@ cp .cursor/mcp.json.example .cursor/mcp.json
 
 Restart Cursor → **Settings → MCP** → verify `atlassian`, `github`, `github-wiki` are green.
 
-**github-wiki** is **vendored** in this repo (upstream `npx` install fails without `pnpm`):
+**atlassian** and **github-wiki** are **vendored** in this repo (reliable startup without `npx`):
 
 ```json
-"command": "bash",
-"args": ["scripts/run-github-wiki-mcp.sh"]
+"atlassian": {
+  "command": "bash",
+  "args": ["scripts/run-atlassian-mcp.sh"]
+},
+"github-wiki": {
+  "command": "bash",
+  "args": ["scripts/run-github-wiki-mcp.sh"]
+}
 ```
 
-The wrapper installs dependencies on first run, then starts `.cursor/mcp-servers/github-wiki-mcp/dist/index.js`.
+Wrappers install production dependencies on first run, then start the local `dist/index.js` for each server.
 
-After updating `src/` under `.cursor/mcp-servers/github-wiki-mcp/`, rebuild:
+After updating vendored `src/` (github-wiki only), refresh:
 
 ```bash
 ./scripts/setup-mcp-servers.sh
@@ -136,9 +142,10 @@ Then `@design-agent`, etc. — each publishes to wiki and updates Jira with link
 | Issue | Fix |
 |-------|-----|
 | No MCP servers | Create `.cursor/mcp.json`, set env vars, restart |
-| `github-wiki-mcp` npm 404 / Connection closed | Upstream needs `pnpm` on install — use vendored `.cursor/mcp-servers/github-wiki-mcp/dist/index.js` (see `.cursor/mcp.json.example`) |
-| `MODULE_NOT_FOUND` … `mcp-servers/.../dist/index.js` | Run `./scripts/setup-mcp-servers.sh` to build vendored server |
-| `@modelcontextprotocol/server-atlassian` 404 | Use `mcp-atlassian` instead; map `ATLASSIAN_BASE_URL` from `ATLASSIAN_URL` |
+| `github-wiki-mcp` npm 404 / Connection closed | Use vendored `scripts/run-github-wiki-mcp.sh` (see `.cursor/mcp.json.example`) |
+| `mcp-atlassian` / atlassian Connection closed | Use vendored `scripts/run-atlassian-mcp.sh` — not `npx` or missing local `dist/` |
+| `MODULE_NOT_FOUND` … `mcp-servers/.../dist/index.js` | Run `./scripts/setup-mcp-servers.sh` |
+| `@modelcontextprotocol/server-atlassian` 404 | Removed — use vendored `mcp-atlassian` via `scripts/run-atlassian-mcp.sh` |
 | Wiki write fails | Enable wiki on repo; check `GITHUB_TOKEN` has `repo` scope |
 | Jira 401 | Verify `ATLASSIAN_*` env vars |
 | Wrong wiki path | Check `project-config.yml` → `project.slug` and `jira.epic_key` |
