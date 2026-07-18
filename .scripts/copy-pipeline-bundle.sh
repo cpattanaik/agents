@@ -6,9 +6,8 @@ usage() {
   cat <<'EOF'
 Usage: copy-pipeline-bundle.sh <target-app-repo>
 
-Copies .cursor/, project-config.yml, .docs/, and .github/ CI assets into the target repo.
-Does not copy .scripts/ — run this script from the agents template repo only.
-Set AGENTS_ROOT to override the source path (default: parent of .scripts/).
+Copies .cursor/, project-config.yml, .docs/, .scripts/, and .github/ CI assets into the target repo.
+Run from the agents template repo root, or set AGENTS_ROOT to override the source path.
 
 Example:
   ./.scripts/copy-pipeline-bundle.sh /path/to/your-app
@@ -36,6 +35,8 @@ required=(
   "$ROOT/.docs/MCP-SETUP.md"
   "$ROOT/.docs/maven-profiles.example.xml"
   "$ROOT/.docs/agent-reports/README.md"
+  "$ROOT/.docs/pipeline-runs/README.md"
+  "$ROOT/.scripts/security-local.sh"
   "$ROOT/.github/workflows/ci.yml"
   "$ROOT/.github/scripts/load-project-config.py"
 )
@@ -47,7 +48,7 @@ for path in "${required[@]}"; do
   fi
 done
 
-mkdir -p "$APP/.github/workflows" "$APP/.github/scripts" "$APP/.docs/agent-reports"
+mkdir -p "$APP/.github/workflows" "$APP/.github/scripts" "$APP/.docs/agent-reports" "$APP/.docs/pipeline-runs" "$APP/.scripts"
 
 if command -v rsync >/dev/null 2>&1; then
   mkdir -p "$APP/.cursor"
@@ -60,6 +61,9 @@ cp "$ROOT/project-config.yml" "$APP/project-config.yml"
 cp "$ROOT/.docs/TESTING.md" "$ROOT/.docs/PROJECT-CONFIG.md" "$ROOT/.docs/MCP-SETUP.md" \
    "$ROOT/.docs/maven-profiles.example.xml" "$APP/.docs/"
 cp "$ROOT/.docs/agent-reports/README.md" "$APP/.docs/agent-reports/"
+cp "$ROOT/.docs/pipeline-runs/README.md" "$APP/.docs/pipeline-runs/"
+cp "$ROOT/.scripts/security-local.sh" "$APP/.scripts/"
+chmod +x "$APP/.scripts/security-local.sh"
 cp "$ROOT/.github/workflows/ci.yml" "$APP/.github/workflows/ci.yml"
 cp "$ROOT/.github/scripts/load-project-config.py" "$APP/.github/scripts/"
 

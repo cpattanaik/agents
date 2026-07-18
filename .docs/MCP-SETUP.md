@@ -40,8 +40,6 @@ MCP config ships in `.cursor/mcp.json` (env var references only — **never put 
 
 Or copy manually — see [Integrate into a new project](../.cursor/skills/README.md#integrate-into-a-new-project) or [PROJECT-CONFIG.md](PROJECT-CONFIG.md#copying-to-a-new-project).
 
-Run the copy script from the **agents template repo** (`.scripts/` is not copied to app repos).
-
 **This repo:** `.cursor/mcp.json` is already present. Set env vars (section 1) and restart Cursor.
 
 ### Prerequisites

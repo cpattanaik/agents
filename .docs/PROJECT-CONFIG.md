@@ -67,15 +67,6 @@ Copy the full bundle into your **application repository**:
 
 See [.scripts/copy-pipeline-bundle.sh](../.scripts/copy-pipeline-bundle.sh) for the exact file list.
 
-**Template repo only:** `.scripts/` is **not** copied to the app repo — run the copy script from this agents template checkout. The app repo receives `.cursor/`, `project-config.yml`, `.docs/`, and `.github/`.
-
-| Copied to app repo | Stays in template repo |
-|--------------------|-------------------------|
-| `.cursor/` | `.scripts/copy-pipeline-bundle.sh` |
-| `project-config.yml` | |
-| `.docs/` | |
-| `.github/workflows/ci.yml`, `.github/scripts/load-project-config.py` | |
-
 Then:
 
 1. Edit `$APP/project-config.yml` — **project** fields once (`project`, `github`, `jira.project_key`, `build`, `security`); set **`jira.epic_key`** per epic/feature

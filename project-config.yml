@@ -18,7 +18,7 @@
 #   NOT IN THIS FILE
 #     Stories, AC, designs per story — Jira issues + wiki Designs/{STORY-KEY}
 #
-# See docs/PROJECT-CONFIG.md for field reference.
+# See .docs/PROJECT-CONFIG.md for field reference.
 # =============================================================================
 
 # --- PROJECT: identity (edit once) -------------------------------------------

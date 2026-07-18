@@ -126,19 +126,19 @@ Copy this **bundle** into your **application repository** (not just the agents t
 
 ```bash
 APP=/path/to/your-app
-mkdir -p "$APP/.github/workflows" "$APP/.github/scripts" "$APP/.docs/agent-reports"
+mkdir -p "$APP/.github/workflows" "$APP/.github/scripts" "$APP/.docs/agent-reports" "$APP/.docs/pipeline-runs" "$APP/.scripts"
 
 rsync -a --exclude='node_modules' .cursor/ "$APP/.cursor/"
 cp project-config.yml "$APP/project-config.yml"
 cp .docs/TESTING.md .docs/PROJECT-CONFIG.md .docs/MCP-SETUP.md .docs/maven-profiles.example.xml "$APP/.docs/"
 cp .docs/agent-reports/README.md "$APP/.docs/agent-reports/"
+cp .docs/pipeline-runs/README.md "$APP/.docs/pipeline-runs/"
+cp .scripts/security-local.sh "$APP/.scripts/" && chmod +x "$APP/.scripts/security-local.sh"
 cp .github/workflows/ci.yml "$APP/.github/workflows/ci.yml"
 cp .github/scripts/load-project-config.py "$APP/.github/scripts/"
 ```
 
 </details>
-
-**Template repo only:** `.scripts/` is not copied to the app repo — run `./.scripts/copy-pipeline-bundle.sh` from this agents template checkout. The app gets `.cursor/`, `project-config.yml`, `.docs/`, and `.github/`.
 
 Then edit `$APP/project-config.yml` (`project`, `github`, `jira`, `build`, `security`).
 
