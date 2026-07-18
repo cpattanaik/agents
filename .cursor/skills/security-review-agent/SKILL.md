@@ -3,7 +3,7 @@ name: security-review-agent
 description: >-
   Runs local and CI security checks (dependency CVEs, secrets scan, SAST) from
   project-config.yml and produces a security review report. Mandatory before PR
-  in strict mode. Use after code review and before regression tests.
+  in strict mode. Use after code review and before opening the PR.
 disable-model-invocation: true
 ---
 
@@ -66,7 +66,7 @@ Read [project-config.yml](../../project-config.yml):
 
 4. **Run CI security check** (when `security.ci.enabled: true`)
 
-   Mirror [regression-test-agent](../regression-test-agent/SKILL.md) discovery:
+   Discover the CI run:
 
    | Condition | Action |
    |-----------|--------|
@@ -141,9 +141,9 @@ Install locally: `brew install gitleaks semgrep` (macOS). Maven plugin goes in a
 - Do not fabricate scan results — run configured commands or report SKIPPED with reason
 - Critical/High findings → FAIL in strict mode; PR Agent blocks
 - Local fast checks (secrets, semgrep) + CI full scan (when `security.ci.require_in_strict: true`)
-- Hand off to Regression Test Agent on PASS
+- Hand off to PR Agent on PASS
 - Follow [jira-integration.md](../jira-integration.md)
 
 ## Handoff
 
-PASS → **Regression Test Agent** → **PR Agent**
+PASS → **PR Agent**

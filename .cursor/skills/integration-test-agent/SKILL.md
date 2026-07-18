@@ -70,4 +70,4 @@ class ApiIntegrationTest {
 
 ## Handoff
 
-PASS → **Review Agent** (code) → **Security Review Agent** → **Regression Test Agent**
+PASS → **Review Agent** (code) → **Security Review Agent** → **PR Agent**

@@ -140,5 +140,5 @@ FIXED | PARTIALLY FIXED | BLOCKED
 - Always comment on Jira with bugfix report — see [jira-integration.md](../jira-integration.md)
 - Keep fixes scoped to the reported bug — no drive-by changes
 - Hand off the bugfix report and code changes to the **Review Agent** (bugfix scope)
-- After fix: **Unit Test Agent** → **Regression Test Agent** (mandatory in strict mode) → **PR Agent** (hotfix branch)
+- After fix: **Unit Test Agent** → **PR Agent** (hotfix branch; CI runs the regression job)
 - Persist report to GitHub Wiki per [wiki-integration.md](../wiki-integration.md)

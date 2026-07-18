@@ -20,7 +20,6 @@ Before creating a PR, confirm prerequisites per [project-config.yml](../../proje
 - [ ] Review Agent (**design** scope) report is APPROVED or APPROVED WITH COMMENTS when design artifacts exist (no Critical items)
 - [ ] Review Agent (**code** scope) report is APPROVED or APPROVED WITH COMMENTS when application code changed (no Critical items)
 - [ ] Unit Test Agent report shows PASS — or **N/A** for config/docs only
-- [ ] Regression Test Agent report shows PASS **or** NOT RUN
 - [ ] All commits are scoped to the intended changes
 
 ### Strict mode (`mode: strict`) — enable after MCP + CI setup
@@ -29,7 +28,6 @@ Before creating a PR, confirm prerequisites per [project-config.yml](../../proje
 - [ ] Review Agent (code) report APPROVED when `gates.review_code.mandatory_in_strict: true`
 - [ ] Unit Test Agent report shows PASS when `gates.unit_tests.mandatory_in_strict: true` (or **N/A** for config/docs only)
 - [ ] Integration Test Agent report shows PASS when API/DB changed and `gates.integration_tests.mandatory_for_api_changes: true`
-- [ ] Regression Test Agent report shows **PASS** when `gates.regression.mandatory_in_strict: true` (NOT RUN blocks PR)
 - [ ] Security Review Agent report shows PASS when `gates.security.mandatory_in_strict: true`
 - [ ] CI security job PASS when `security.ci.require_in_strict: true`
 - [ ] `gh pr checks` → `ci-success` PASS when `gates.pr.require_ci_success: true`
@@ -105,7 +103,7 @@ In the PR body, note `Unit tests: N/A — config/docs only`. For any application
 **PR:** [url]
 **Review:** APPROVED | APPROVED WITH COMMENTS
 **Unit tests:** PASS | N/A
-**Regression:** PASS | NOT RUN
+**Regression (CI job):** PASS | FAIL | PENDING
 ```
 
 ## PR Body Template
@@ -119,7 +117,7 @@ In the PR body, note `Unit tests: N/A — config/docs only`. For any application
 - Unit tests: PASS (N tests) | N/A (config/docs only)
 - Integration tests: PASS | N/A
 - Security review: PASS | N/A
-- Regression: PASS | NOT RUN
+- Regression (CI job): PASS | FAIL | PENDING
 
 ## Agent Reports (Wiki)
 - Planning: https://github.com/org/repo/wiki/.../Agent-Reports/planning-agent-...
@@ -167,7 +165,7 @@ When a PR already exists:
 - Update Jira when story keys provided — see [jira-integration.md](../jira-integration.md)
 - Persist report to GitHub Wiki per [wiki-integration.md](../wiki-integration.md)
 - PR body links **wiki URLs** for all agent reports and documents
-- In `strict` mode, block PR when regression is NOT RUN, security review FAIL, CI security job FAIL, or `gh pr checks` not all PASS
+- In `strict` mode, block PR when security review FAIL, CI security job FAIL, or `gh pr checks` not all PASS (the `regression` CI job is part of `ci-success`)
 
 ## Handoff
 

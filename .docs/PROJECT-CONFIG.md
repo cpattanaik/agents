@@ -138,7 +138,6 @@ Copy IDs into `jira.transitions` in `project-config.yml`. Map each key to your w
 | `story_to_unit_test_pass` | Unit Test |
 | `story_to_integration_test_pass` | Integration Test |
 | `story_to_security_pass` | Security Review |
-| `story_to_regression_pass` | Regression |
 | `story_to_pr_open` | PR (opened) |
 | `story_to_done` | PR (after merge) |
 | `bug_to_in_progress` | Bugfix |
@@ -147,7 +146,7 @@ Copy IDs into `jira.transitions` in `project-config.yml`. Map each key to your w
 
 | Mode | When to use |
 |------|-------------|
-| `dev` | **Default** — relaxed regression/security gates; **Jira still required for `@planning-agent`** |
+| `dev` | **Default** — relaxed security gates; **Jira still required for `@planning-agent`** |
 | `strict` | Full corporate gates after MCP, CI, pom profiles, and Jira transitions are configured |
 
 ```yaml
@@ -155,7 +154,7 @@ pipeline:
   mode: dev    # change to strict when integration checklist is complete
 ```
 
-In `strict`, Planning Agent requires Jira + Wiki MCP; PR Agent requires regression PASS and CI security PASS.
+In `strict`, Planning Agent requires Jira + Wiki MCP; PR Agent requires `ci-success` (which includes the CI `regression` job) and CI security PASS.
 
 ## Planning gate (`pipeline.gates.planning`)
 
@@ -176,7 +175,6 @@ In `strict`, Planning Agent requires Jira + Wiki MCP; PR Agent requires regressi
 | `integration_tests` | `mandatory_for_api_changes` | `story_to_integration_test_pass` |
 | `review_code` | `require_approved`, `require_unit_test_pass`, `require_integration_test_pass` | `story_to_code_review_approved` |
 | `security` | `require_code_review_approved` | `story_to_security_pass` |
-| `regression` | `ci_workflow`, `ci_job`, `auto_discover_ci` | `story_to_regression_pass` |
 | `pr` | `require_ci_success` | `story_to_pr_open`, `story_to_done` |
 
 `pipeline.environments.dev.gates` relaxes selected gates in dev mode (see [project-config.yml](../project-config.yml)).
@@ -223,19 +221,7 @@ Add a `security` job to `.github/workflows/ci.yml` in the app repo. The agent di
 
 ## Regression test suites
 
-Define regression in **`project-config.yml`** → `pipeline.gates.regression` — CI reads commands from `build.regression_command` via `.github/scripts/load-project-config.py`.
-
-### Agent gate (which workflow/job)
-
-```yaml
-pipeline:
-  gates:
-    regression:
-      mandatory_in_strict: true
-      auto_discover_ci: true
-      ci_workflow: ci
-      ci_job: regression
-```
+Regression runs as a **CI job** (there is no dedicated regression agent). CI reads the suite command from `build.regression_command` via `.github/scripts/load-project-config.py`, and the PR gate covers it through the aggregate `ci-success` check.
 
 ### Suite command (what CI runs)
 
@@ -327,7 +313,7 @@ The `config` job loads `build.*_command` and `build.regression.*` from `project-
 | `unit-test` | Unit Test Agent, PR Agent |
 | `integration-test` | Integration Test Agent, PR Agent |
 | `security` | Security Review Agent |
-| `regression` | Regression Test Agent |
+| `regression` | CI regression suite (covered by `ci-success`) |
 | `ci-success` | PR Agent aggregate gate (`gh pr checks`) |
 
 Optional secret: `NVD_API_KEY` for OWASP dependency-check.

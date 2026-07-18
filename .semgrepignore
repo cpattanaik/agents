@@ -1,0 +1,10 @@
+# Semgrep ignore — scope SAST to the shipped application, not tooling/vendored code.
+
+# Vendored MCP server tooling (dev-only; runs locally for Jira/Wiki integration)
+.cursor/mcp-servers/
+
+# Build output
+target/
+
+# Dependencies (also ignored by default; explicit for clarity)
+node_modules/

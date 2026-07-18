@@ -130,6 +130,5 @@ Coding Agent (done)
   → Integration Test Agent (when API/DB boundaries changed)
   → Review Agent (code scope)
   → Security Review Agent (strict mode)
-  → Regression Test Agent
   → PR Agent
 ```

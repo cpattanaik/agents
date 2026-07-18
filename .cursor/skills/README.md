@@ -45,7 +45,6 @@ flowchart TB
         Security[Security Review Agent]
     end
     subgraph ship [Ship]
-        Regression[Regression Test Agent]
         PRAgent[PR Agent]
     end
     subgraph prod [Production]
@@ -63,10 +62,8 @@ flowchart TB
     UnitTest --> IntTest
     IntTest --> CodeReview
     CodeReview --> Security
-    Security --> Regression
-    Regression --> PRAgent
+    Security --> PRAgent
     Bugfix --> UnitTest
-    Bugfix --> Regression
 ```
 
 ## Agents
@@ -80,8 +77,7 @@ flowchart TB
 | Coding | [coding-agent/](coding-agent/) | After design review approved |
 | Unit Test | [unit-test-agent/](unit-test-agent/) | After code changes |
 | Integration Test | [integration-test-agent/](integration-test-agent/) | After unit tests; API/DB changes |
-| Security Review | [security-review-agent/](security-review-agent/) | Before regression; mandatory in strict mode |
-| Regression Test | [regression-test-agent/](regression-test-agent/) | CI pipeline; mandatory in strict mode |
+| Security Review | [security-review-agent/](security-review-agent/) | Before PR; mandatory in strict mode |
 | PR | [pr-agent/](pr-agent/) | All gates pass |
 | Bugfix | [bugfix-agent/](bugfix-agent/) | Jira bug link (mandatory in production) |
 
@@ -107,7 +103,6 @@ Invoke by skill name in Cursor:
 @unit-test-agent
 @integration-test-agent
 @security-review-agent
-@regression-test-agent
 @pr-agent
 @bugfix-agent
 ```
@@ -164,11 +159,11 @@ Agent reports live on **GitHub Wiki** under `Projects/{slug}/Epics/{EPIC-KEY}/Ag
 
 ```
 Planning → Design → Review(design) → Coding → Unit → Integration
-  → Review(code) → Security → Regression(CI) → PR → merge
+  → Review(code) → Security → PR → merge
 ```
 
-1. Push feature branch before `@regression-test-agent`
-2. `@pr-agent` creates PR and waits for `gh pr checks` (`ci-success` PASS) in strict mode
+1. Push feature branch before `@pr-agent`
+2. `@pr-agent` creates PR and waits for `gh pr checks` (`ci-success` PASS, which includes the CI `regression` job) in strict mode
 3. Human merges when CI green
 
 **Stack note:** CI template targets **Maven/Java 21** only. Gradle projects need a custom workflow; agents assume Maven commands from `project-config.yml` → `build.*`.
@@ -192,9 +187,8 @@ Planning → Design → Review(design) → Coding → Unit → Integration
 7. Integration Test Agent → report to wiki (API changes)
 8. Review Agent (code)    → report to wiki
 9. Security Review Agent  → report to wiki
-10. Regression Agent      → report to wiki + CI link on Jira
-11. PR Agent              → PR with wiki URLs for all docs/reports
-12. Bugfix Agent          → prod hotfix; report to wiki; Jira bug gets wiki link
+10. PR Agent              → PR with wiki URLs for all docs/reports (CI runs the regression job)
+11. Bugfix Agent          → prod hotfix; report to wiki; Jira bug gets wiki link
 ```
 
 All documents live under: `Projects/{slug}/Epics/{EPIC-KEY}/` on GitHub Wiki.

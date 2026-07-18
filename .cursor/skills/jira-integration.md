@@ -99,7 +99,6 @@ jira:
     story_to_unit_test_pass: "43"             # Unit Test Agent
     story_to_integration_test_pass: "44"      # Integration Test Agent
     story_to_security_pass: "45"              # Security Review Agent
-    story_to_regression_pass: "46"            # Regression Test Agent
     story_to_pr_open: "47"                    # PR Agent (PR opened)
     story_to_done: "51"                       # PR Agent (after merge)
     bug_to_in_progress: "11"                  # Bugfix Agent
@@ -179,7 +178,6 @@ Only transition issues when the agent's workflow explicitly requires it and the 
 | Unit Test | `story_to_unit_test_pass` | → (your workflow) | Report PASS |
 | Integration Test | `story_to_integration_test_pass` | → (your workflow) | Report PASS |
 | Security Review | `story_to_security_pass` | → (your workflow) | Report PASS |
-| Regression | `story_to_regression_pass` | → (your workflow) | CI PASS |
 | PR | `story_to_pr_open` | → (your workflow) | PR opened |
 | PR | `story_to_done` | → Done | After merge (user confirms) |
 | Bugfix | `bug_to_in_progress` | → In Progress | Fix started |

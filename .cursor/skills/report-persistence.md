@@ -15,7 +15,6 @@ All pipeline agents publish reports and documents to **GitHub Wiki** under the p
 | Coding | `build.compile_command` |
 | Unit Test | `build.test_command` |
 | Integration Test | `build.integration_test_command` |
-| Regression / CI | `build.regression_command` |
 
 Optional `build.maven_module` appends `-pl {module}` to all commands.
 
@@ -94,6 +93,5 @@ Gate mapping:
 | integration-test-agent | PASS (when API/DB changed) |
 | review-agent (code) | APPROVED or APPROVED WITH COMMENTS |
 | security-review-agent | PASS |
-| regression-test-agent | PASS (strict mode) |
 
 If wiki read fails and mirror is disabled → gate is **BLOCKED** in strict mode.

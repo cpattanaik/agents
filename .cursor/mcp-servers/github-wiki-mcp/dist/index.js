@@ -26,7 +26,7 @@ const TOOLS = [
                 },
                 token: {
                     type: 'string',
-                    description: 'GitHub personal access token with repo scope',
+                    description: 'GitHub personal access token with repo scope (optional; defaults to GITHUB_TOKEN env var)',
                 },
                 pageName: {
                     type: 'string',
@@ -41,7 +41,7 @@ const TOOLS = [
                     description: 'Optional commit message (defaults to "Update {pageName}")',
                 },
             },
-            required: ['owner', 'repo', 'token', 'pageName', 'content'],
+            required: ['owner', 'repo', 'pageName', 'content'],
         },
     },
     {
@@ -60,14 +60,14 @@ const TOOLS = [
                 },
                 token: {
                     type: 'string',
-                    description: 'GitHub personal access token with repo scope',
+                    description: 'GitHub personal access token with repo scope (optional; defaults to GITHUB_TOKEN env var)',
                 },
                 pageName: {
                     type: 'string',
                     description: 'Name of the wiki page to read',
                 },
             },
-            required: ['owner', 'repo', 'token', 'pageName'],
+            required: ['owner', 'repo', 'pageName'],
         },
     },
     {
@@ -86,7 +86,7 @@ const TOOLS = [
                 },
                 token: {
                     type: 'string',
-                    description: 'GitHub personal access token with repo scope',
+                    description: 'GitHub personal access token with repo scope (optional; defaults to GITHUB_TOKEN env var)',
                 },
                 pageName: {
                     type: 'string',
@@ -101,7 +101,7 @@ const TOOLS = [
                     description: 'Optional commit message (defaults to "Append to {pageName}")',
                 },
             },
-            required: ['owner', 'repo', 'token', 'pageName', 'content'],
+            required: ['owner', 'repo', 'pageName', 'content'],
         },
     },
     {
@@ -120,10 +120,10 @@ const TOOLS = [
                 },
                 token: {
                     type: 'string',
-                    description: 'GitHub personal access token with repo scope',
+                    description: 'GitHub personal access token with repo scope (optional; defaults to GITHUB_TOKEN env var)',
                 },
             },
-            required: ['owner', 'repo', 'token'],
+            required: ['owner', 'repo'],
         },
     },
     {
@@ -142,7 +142,7 @@ const TOOLS = [
                 },
                 token: {
                     type: 'string',
-                    description: 'GitHub personal access token with repo scope',
+                    description: 'GitHub personal access token with repo scope (optional; defaults to GITHUB_TOKEN env var)',
                 },
                 pageName: {
                     type: 'string',
@@ -153,7 +153,7 @@ const TOOLS = [
                     description: 'Optional commit message (defaults to "Delete {pageName}")',
                 },
             },
-            required: ['owner', 'repo', 'token', 'pageName'],
+            required: ['owner', 'repo', 'pageName'],
         },
     },
 ];

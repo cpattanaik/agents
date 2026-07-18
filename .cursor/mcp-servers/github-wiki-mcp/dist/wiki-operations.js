@@ -8,8 +8,10 @@ import os from 'os';
  */
 function normalizePageName(pageName) {
     const normalized = pageName
-        .replace(/\s+/g, '-')
-        .replace(/[^a-zA-Z0-9\-_]/g, '');
+        .split('/')
+        .map((segment) => segment.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-_]/g, ''))
+        .filter((segment) => segment.length > 0)
+        .join('/');
     return normalized.endsWith('.md') ? normalized : `${normalized}.md`;
 }
 /**
@@ -50,13 +52,14 @@ async function cleanup(tmpDir) {
  * Write or update a wiki page
  */
 export async function writeWikiPage(args) {
-    const { owner, repo, token, pageName, content, commitMessage } = args;
+    const { owner, repo, token = process.env.GITHUB_TOKEN, pageName, content, commitMessage } = args;
     const fileName = normalizePageName(pageName);
     let tmpDir = null;
     try {
         const { tmpDir: dir, git } = await cloneWiki({ owner, repo, token });
         tmpDir = dir;
         const filePath = path.join(tmpDir, fileName);
+        await fs.mkdir(path.dirname(filePath), { recursive: true });
         await fs.writeFile(filePath, content, 'utf-8');
         await git.add(fileName);
         await git.commit(commitMessage || `Update ${fileName}`);
@@ -78,7 +81,7 @@ export async function writeWikiPage(args) {
  * Append content to an existing wiki page
  */
 export async function appendToWikiPage(args) {
-    const { owner, repo, token, pageName, content, commitMessage } = args;
+    const { owner, repo, token = process.env.GITHUB_TOKEN, pageName, content, commitMessage } = args;
     const fileName = normalizePageName(pageName);
     let tmpDir = null;
     try {
@@ -97,6 +100,7 @@ export async function appendToWikiPage(args) {
         const newContent = existingContent
             ? `${existingContent}\n\n${content}`
             : content;
+        await fs.mkdir(path.dirname(filePath), { recursive: true });
         await fs.writeFile(filePath, newContent, 'utf-8');
         await git.add(fileName);
         await git.commit(commitMessage || `Append to ${fileName}`);
@@ -116,7 +120,7 @@ export async function appendToWikiPage(args) {
  * List all wiki pages
  */
 export async function listWikiPages(args) {
-    const { owner, repo, token } = args;
+    const { owner, repo, token = process.env.GITHUB_TOKEN } = args;
     let tmpDir = null;
     try {
         const { tmpDir: dir } = await cloneWiki({ owner, repo, token });
@@ -145,7 +149,7 @@ export async function listWikiPages(args) {
  * Delete a wiki page
  */
 export async function deleteWikiPage(args) {
-    const { owner, repo, token, pageName, commitMessage } = args;
+    const { owner, repo, token = process.env.GITHUB_TOKEN, pageName, commitMessage } = args;
     const fileName = normalizePageName(pageName);
     let tmpDir = null;
     try {
@@ -178,7 +182,7 @@ export async function deleteWikiPage(args) {
  * Read a wiki page content
  */
 export async function readWikiPage(args) {
-    const { owner, repo, token, pageName } = args;
+    const { owner, repo, token = process.env.GITHUB_TOKEN, pageName } = args;
     const fileName = normalizePageName(pageName);
     let tmpDir = null;
     try {

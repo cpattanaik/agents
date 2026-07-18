@@ -51,7 +51,6 @@ Controls end-to-end pipeline execution: verifies gates, collects reports, blocks
 | Integration tests | `gates.integration_tests` | `integration-test-agent-*.md` | PASS | `story_to_integration_test_pass` |
 | Code review | `gates.review_code` | `review-agent-*.md` scope=code | APPROVED | `story_to_code_review_approved` |
 | Security | `gates.security` | `security-review-agent-*.md` | PASS | `story_to_security_pass` |
-| Regression | `gates.regression` | `regression-test-agent-*.md` | PASS | `story_to_regression_pass` |
 | PR | `gates.pr` | All mandatory gates pass | — | `story_to_pr_open`, `story_to_done` |
 
 **Gate prerequisites from config:**

@@ -23,20 +23,20 @@
 
 # --- PROJECT: identity (edit once) -------------------------------------------
 project:
-  name: My Project                      # display name
-  slug: my-project                      # wiki folder — lowercase kebab-case
+  name: project name                      # display name
+  slug: project name                      # wiki folder — lowercase kebab-case
 
 # --- PROJECT: GitHub repo + wiki (edit once) --------------------------------
 github:
-  owner: myorg
-  repo: my-repo
+  owner: cpattanaik
+  repo: repo name
   default_branch: main
 
 # --- PROJECT: Jira project + workflow (edit once) -----------------------------
 # --- EPIC: jira.epic_key (update per epic/feature run) -----------------------
 jira:
-  project_key: PROJ                     # Jira project — required for @planning-agent
-  epic_key: null                        # EPIC: set after planning, e.g. PROJ-100
+  project_key: PROJ                      # Jira project — required for @planning-agent
+  epic_key: null                       # EPIC: set after planning, e.g. PROJ-100
 
   epic_name_field: customfield_10011    # Jira Cloud Epic Name field ID
   epic_link_field: customfield_10014    # Jira Server/DC Epic Link field ID
@@ -56,7 +56,6 @@ jira:
     story_to_unit_test_pass: null               # Unit Test Agent — PASS
     story_to_integration_test_pass: null        # Integration Test Agent — PASS
     story_to_security_pass: null              # Security Review Agent — PASS
-    story_to_regression_pass: null            # Regression Test Agent — PASS
     story_to_pr_open: null                    # PR Agent — PR opened
     story_to_done: null                       # PR Agent (after merge, user confirms)
     bug_to_in_progress: null                  # Bugfix Agent
@@ -118,13 +117,6 @@ pipeline:
       require_code_review_approved: true
       # transition on PASS: jira.transitions.story_to_security_pass
 
-    regression:
-      mandatory_in_strict: true
-      auto_discover_ci: true
-      ci_workflow: ci
-      ci_job: regression
-      # transition on PASS: jira.transitions.story_to_regression_pass
-
     pr:
       mandatory_in_strict: true
       require_ci_success: true
@@ -142,8 +134,6 @@ pipeline:
         integration_tests:
           mandatory_in_strict: false
         security:
-          mandatory_in_strict: false
-        regression:
           mandatory_in_strict: false
     staging:
       mode: strict
