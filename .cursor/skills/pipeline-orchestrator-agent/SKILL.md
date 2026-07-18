@@ -25,7 +25,7 @@ Controls end-to-end pipeline execution: verifies gates, collects reports, blocks
    - Read [project-config.yml](../../project-config.yml)
 
 2. **Create or load run manifest**
-   - Path: `docs/pipeline-runs/<epic-key>-<run-id>.md`
+   - Path: `.docs/pipeline-runs/<epic-key>-<run-id>.md`
    - Track: current phase, agent reports (wiki URLs), gate status per phase
 
 3. **Verify prior reports (wiki-first)**
@@ -36,23 +36,31 @@ Controls end-to-end pipeline execution: verifies gates, collects reports, blocks
    2. Jira epic/story comments (`Wiki Report:` links)
    3. Repo mirror only if `pipeline.reporting.mirror_to_repo: true`
 
-4. **Verify gates in order**
+4. **Verify gates in order** — read `pipeline.gates.*` from [project-config.yml](../../project-config.yml). When `mandatory_in_strict: true` and mode is `strict`, missing or FAIL reports block handoff.
 
-| Phase | Prerequisite report | Required status | Gate |
-|-------|---------------------|-----------------|------|
-| Planning | — | — | PRD + architecture exist on wiki |
-| Planning complete | `planning-agent-*.md` | PASS | Jira epic + stories; PRD + architecture on wiki |
-| Design | Planning PASS or audited skip | PASS | PRD + architecture |
-| Design complete | `design-agent-*.md` | COMPLETE | Traceability matrix |
-| Design review | `review-agent-*.md` scope=design | APPROVED | No Critical items |
-| Coding | Design approved + Ready for Dev | — | Jira story keys |
-| Coding complete | `coding-agent-*.md` | COMPLETE | Build PASS |
-| Unit tests | `unit-test-agent-*.md` | PASS | Coverage threshold in strict |
-| Integration tests | `integration-test-agent-*.md` | PASS | When API/DB changed |
-| Code review | `review-agent-*.md` scope=code | APPROVED | No Critical |
-| Security | `security-review-agent-*.md` | PASS | Local + CI when `security.ci.require_in_strict` |
-| Regression | `regression-test-agent-*.md` | PASS | Mandatory in strict; NOT RUN blocks |
-| PR | All above gates pass | — | CI `ci-success` on PR branch |
+| Phase | Config gate | Prerequisite report | Required status | Jira transition (when set) |
+|-------|-------------|---------------------|-----------------|----------------------------|
+| Planning | `gates.planning` | — | — | — |
+| Planning complete | `gates.planning` | `planning-agent-*.md` | PASS | `story_to_refined` |
+| Design | `gates.design` | Planning PASS or audited skip | PASS | — |
+| Design complete | `gates.design` | `design-agent-*.md` | COMPLETE | — |
+| Design review | `gates.review_design` | `review-agent-*.md` scope=design | APPROVED | `story_to_ready_for_dev` |
+| Coding | `gates.coding` | Design review APPROVED | — | `story_to_in_progress` |
+| Coding complete | `gates.coding` | `coding-agent-*.md` | COMPLETE | `story_to_in_review` |
+| Unit tests | `gates.unit_tests` | `unit-test-agent-*.md` | PASS | `story_to_unit_test_pass` |
+| Integration tests | `gates.integration_tests` | `integration-test-agent-*.md` | PASS | `story_to_integration_test_pass` |
+| Code review | `gates.review_code` | `review-agent-*.md` scope=code | APPROVED | `story_to_code_review_approved` |
+| Security | `gates.security` | `security-review-agent-*.md` | PASS | `story_to_security_pass` |
+| Regression | `gates.regression` | `regression-test-agent-*.md` | PASS | `story_to_regression_pass` |
+| PR | `gates.pr` | All mandatory gates pass | — | `story_to_pr_open`, `story_to_done` |
+
+**Gate prerequisites from config:**
+- `gates.coding.require_design_review_approved` — block coding until design review APPROVED
+- `gates.review_code.require_unit_test_pass` — block code review until unit tests PASS
+- `gates.review_code.require_integration_test_pass` — when true, require integration-test PASS (enable in strict for API changes)
+- `gates.security.require_code_review_approved` — block security until code review APPROVED
+- `gates.integration_tests.mandatory_for_api_changes` — FAIL if API/DB changed and no integration report
+- `gates.pr.require_ci_success` — PR Agent waits for `ci-success` check in strict mode
 
 5. **Produce orchestrator report**
 
@@ -63,7 +71,7 @@ Controls end-to-end pipeline execution: verifies gates, collects reports, blocks
 READY FOR <next-agent> | BLOCKED at <phase>
 
 ## Run manifest
-- **Path**: docs/pipeline-runs/...
+- **Path**: .docs/pipeline-runs/...
 - **Mode**: strict | dev
 - **Epic**: PROJ-100
 
@@ -79,7 +87,7 @@ READY FOR <next-agent> | BLOCKED at <phase>
 Invoke @<agent-name> with [inputs]
 ```
 
-6. **Persist manifest** to `docs/pipeline-runs/` (include wiki URLs for each verified report)
+6. **Persist manifest** to `.docs/pipeline-runs/` (include wiki URLs for each verified report)
 
 ## Rules
 

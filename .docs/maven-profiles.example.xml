@@ -1,6 +1,6 @@
 <!--
   Spring Boot Maven snippets — merge into your app pom.xml.
-  See docs/TESTING.md for usage with the agent pipeline.
+  See .docs/TESTING.md for usage with the agent pipeline.
 -->
 
 <!-- ========== OWASP dependency-check (CI security job) ========== -->

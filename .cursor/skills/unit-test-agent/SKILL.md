@@ -32,7 +32,7 @@ Generate unit tests for new or changed code, execute them, and produce a structu
 
 5. **Run tests**
    - Run `build.test_command` (default: `./mvnw -B test`)
-   - See [docs/TESTING.md](../../docs/TESTING.md)
+   - See [.docs/TESTING.md](../../.docs/TESTING.md)
    - Capture stdout, stderr, pass/fail counts, and duration
 
 6. **Fix failing tests** (only tests you generated or that fail due to your changes)
@@ -42,16 +42,17 @@ Generate unit tests for new or changed code, execute them, and produce a structu
 
 7. **Produce report** using the template below
 
-8. **Enforce coverage threshold** (when `project-config.yml` → `pipeline.gates.unit_tests.enforce_threshold_in_strict: true`)
-   - Read `coverage_threshold_percent` (default 80)
+8. **Enforce coverage threshold** (when `pipeline.gates.unit_tests.enforce_threshold_in_strict: true` and mode is strict)
+   - Read `pipeline.gates.unit_tests.coverage_threshold_percent` (default 80)
    - If measurable and below threshold → report status **FAIL**
+   - When `pipeline.gates.unit_tests.mandatory_in_strict: false` (dev), warn but do not block downstream on FAIL unless user confirms
 
 9. **Persist report** — publish to wiki `.../Agent-Reports/unit-test-agent-{date}.md`
 
 10. **Update Jira** (when Jira story keys provided)
    - Follow [jira-integration.md](../jira-integration.md)
    - Comment on each story: status PASS/FAIL, tests run, failures
-   - Comment only — do not transition issues
+   - When status **PASS** and `jira.transitions.story_to_unit_test_pass` is set → transition; otherwise comment only
 
 ```
 ## Unit Test Agent Report

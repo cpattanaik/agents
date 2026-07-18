@@ -17,21 +17,24 @@ Before creating a PR, confirm prerequisites per [project-config.yml](../../proje
 
 ### Dev mode (`mode: dev`)
 
-- [ ] Review Agent report is APPROVED or APPROVED WITH COMMENTS (no Critical items)
+- [ ] Review Agent (**design** scope) report is APPROVED or APPROVED WITH COMMENTS when design artifacts exist (no Critical items)
+- [ ] Review Agent (**code** scope) report is APPROVED or APPROVED WITH COMMENTS when application code changed (no Critical items)
 - [ ] Unit Test Agent report shows PASS — or **N/A** for config/docs only
 - [ ] Regression Test Agent report shows PASS **or** NOT RUN
 - [ ] All commits are scoped to the intended changes
 
 ### Strict mode (`mode: strict`) — enable after MCP + CI setup
 
-- [ ] Review Agent report is APPROVED or APPROVED WITH COMMENTS (no Critical items)
-- [ ] Unit Test Agent report shows PASS (or N/A for config/docs only)
-- [ ] Regression Test Agent report shows **PASS** (NOT RUN blocks PR)
+- [ ] Review Agent (design) report APPROVED when `gates.review_design.mandatory_in_strict: true`
+- [ ] Review Agent (code) report APPROVED when `gates.review_code.mandatory_in_strict: true`
+- [ ] Unit Test Agent report shows PASS when `gates.unit_tests.mandatory_in_strict: true` (or **N/A** for config/docs only)
+- [ ] Integration Test Agent report shows PASS when API/DB changed and `gates.integration_tests.mandatory_for_api_changes: true`
+- [ ] Regression Test Agent report shows **PASS** when `gates.regression.mandatory_in_strict: true` (NOT RUN blocks PR)
 - [ ] Security Review Agent report shows PASS when `gates.security.mandatory_in_strict: true`
-- [ ] CI security job PASS when `security.ci.require_in_strict: true` (see Security Review report)
-- [ ] Integration Test Agent report shows PASS when API/DB boundaries changed
+- [ ] CI security job PASS when `security.ci.require_in_strict: true`
+- [ ] `gh pr checks` → `ci-success` PASS when `gates.pr.require_ci_success: true`
 - [ ] All commits are scoped to the intended changes
-- [ ] Agent reports published to **wiki** (URLs linked in PR body); repo mirror optional
+- [ ] Agent reports published to **wiki** (URLs linked in PR body)
 
 If prerequisites are not met, report what's blocking and do not open the PR.
 
@@ -94,8 +97,8 @@ In the PR body, note `Unit tests: N/A — config/docs only`. For any application
 6. **Update Jira** (when Jira story keys provided)
    - Follow [jira-integration.md](../jira-integration.md)
    - Comment on each story with PR URL and test evidence
-   - Transition story → **In Review** (if not already)
-   - Do not transition to Done unless user explicitly confirms merge
+   - When `jira.transitions.story_to_pr_open` is set → transition (PR opened); else if `story_to_in_review` is set and not already In Review → transition **In Review**
+   - When user confirms merge and `jira.transitions.story_to_done` is set → transition **Done**; otherwise comment only
 
 ```
 ## PR Agent Report

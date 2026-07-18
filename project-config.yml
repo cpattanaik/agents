@@ -1,0 +1,209 @@
+# =============================================================================
+# Agentic SDLC — Project Configuration (single file)
+# =============================================================================
+# All agents and CI read this file. Edit in place — no separate .example copy.
+#
+# WHAT TO EDIT — by scope:
+#
+#   PROJECT (set once per application repository)
+#     project.*, github.*, jira.project_key, jira.epic_name_field,
+#     jira.epic_link_field, jira.custom_fields, jira.transitions,
+#     wiki.pages.*, pipeline.gates.*, pipeline.mode, build.*, security.*
+#
+#   EPIC / FEATURE (update when starting a new epic or feature run)
+#     jira.epic_key — null until @planning-agent creates the epic; then set to
+#                     e.g. PROJ-100. Wiki paths use this key:
+#                     Projects/{project.slug}/Epics/{jira.epic_key}/...
+#
+#   NOT IN THIS FILE
+#     Stories, AC, designs per story — Jira issues + wiki Designs/{STORY-KEY}
+#
+# See docs/PROJECT-CONFIG.md for field reference.
+# =============================================================================
+
+# --- PROJECT: identity (edit once) -------------------------------------------
+project:
+  name: My Project                      # display name
+  slug: my-project                      # wiki folder — lowercase kebab-case
+
+# --- PROJECT: GitHub repo + wiki (edit once) --------------------------------
+github:
+  owner: myorg
+  repo: my-repo
+  default_branch: main
+
+# --- PROJECT: Jira project + workflow (edit once) -----------------------------
+# --- EPIC: jira.epic_key (update per epic/feature run) -----------------------
+jira:
+  project_key: PROJ                     # Jira project — required for @planning-agent
+  epic_key: null                        # EPIC: set after planning, e.g. PROJ-100
+
+  epic_name_field: customfield_10011    # Jira Cloud Epic Name field ID
+  epic_link_field: customfield_10014    # Jira Server/DC Epic Link field ID
+
+  custom_fields:                        # optional — map to your Jira custom fields
+    design_doc_url: customfield_10100
+    pr_url: customfield_10101
+
+  # Discover IDs: GET /rest/api/3/issue/{KEY}/transitions
+  # null = comment only; set before pipeline.mode: strict
+  transitions:
+    story_to_refined: null                    # Planning Agent
+    story_to_ready_for_dev: null              # Review Agent (design scope)
+    story_to_in_progress: null                # Coding Agent (start)
+    story_to_in_review: null                  # Coding Agent (complete)
+    story_to_code_review_approved: null       # Review Agent (code scope) — APPROVED, no Critical
+    story_to_unit_test_pass: null               # Unit Test Agent — PASS
+    story_to_integration_test_pass: null        # Integration Test Agent — PASS
+    story_to_security_pass: null              # Security Review Agent — PASS
+    story_to_regression_pass: null            # Regression Test Agent — PASS
+    story_to_pr_open: null                    # PR Agent — PR opened
+    story_to_done: null                       # PR Agent (after merge, user confirms)
+    bug_to_in_progress: null                  # Bugfix Agent
+
+# --- PROJECT: wiki page names (edit once; paths include epic_key at runtime) --
+wiki:
+  pages:
+    prd: PRD
+    architecture: Architecture
+    designs: Designs                    # per-story: Designs/{STORY-KEY}
+    agent_reports: Agent-Reports
+
+# --- PROJECT: pipeline gates (edit once; switch mode when ready) --------------
+pipeline:
+  mode: dev                             # dev → strict after MCP + CI + transitions
+
+  gates:
+    # Phase order matches pipeline-orchestrator-agent gate table
+    planning:
+      mandatory_in_strict: true
+      require_artifact_approval: true  # reserved — human sign-off before design
+
+    design:
+      mandatory_in_strict: true
+      require_planning_pass_report: true
+      allow_skip_with_approver: true
+
+    review_design:
+      mandatory_in_strict: true
+      require_approved: true            # APPROVED or APPROVED WITH COMMENTS, no Critical
+      # transition: jira.transitions.story_to_ready_for_dev
+
+    coding:
+      mandatory_in_strict: true
+      require_design_review_approved: true
+      # start transition: jira.transitions.story_to_in_progress
+      # complete transition: jira.transitions.story_to_in_review
+
+    unit_tests:
+      mandatory_in_strict: true
+      coverage_threshold_percent: 80
+      enforce_threshold_in_strict: true
+      # transition on PASS: jira.transitions.story_to_unit_test_pass
+
+    integration_tests:
+      mandatory_in_strict: false        # orchestrator enforces when API/DB changed
+      mandatory_for_api_changes: true
+      # transition on PASS: jira.transitions.story_to_integration_test_pass
+
+    review_code:
+      mandatory_in_strict: true
+      require_approved: true
+      require_unit_test_pass: true        # unit-test report PASS before code review
+      require_integration_test_pass: false  # true in strict when API/DB changed
+      # transition on APPROVED: jira.transitions.story_to_code_review_approved
+
+    security:
+      mandatory_in_strict: true
+      require_code_review_approved: true
+      # transition on PASS: jira.transitions.story_to_security_pass
+
+    regression:
+      mandatory_in_strict: true
+      auto_discover_ci: true
+      ci_workflow: ci
+      ci_job: regression
+      # transition on PASS: jira.transitions.story_to_regression_pass
+
+    pr:
+      mandatory_in_strict: true
+      require_ci_success: true
+      # open transition: jira.transitions.story_to_pr_open
+      # done transition: jira.transitions.story_to_done
+
+  environments:
+    dev:
+      mode: dev
+      gates:
+        review_code:
+          mandatory_in_strict: false
+        unit_tests:
+          mandatory_in_strict: false
+        integration_tests:
+          mandatory_in_strict: false
+        security:
+          mandatory_in_strict: false
+        regression:
+          mandatory_in_strict: false
+    staging:
+      mode: strict
+    production:
+      mode: strict
+      gates:
+        planning:
+          require_artifact_approval: true
+
+  reporting:
+    wiki_canonical: true
+    mirror_to_repo: false
+    base_path: .docs/agent-reports
+
+# --- PROJECT: Maven build (edit once per repo stack) --------------------------
+build:
+  tool: maven                           # bundled CI is Maven/Java only
+  java_version: "21"
+  maven_module: null                    # optional: api-module → -pl flag
+
+  compile_command: ./mvnw -B compile
+  test_command: ./mvnw -B test
+  integration_test_command: ./mvnw -B verify -Pintegration
+  regression_command: ./mvnw -B verify -Pregression
+  ci_workflow: ci
+
+  regression:
+    profile: regression
+    groups: regression
+    description: Full regression suite (CI job regression)
+    includes: []
+    excludes: []
+
+# --- PROJECT: security scans (edit once) --------------------------------------
+security:
+  block_on: [critical, high]
+
+  local:
+    enabled: true
+    # wrapper_script: ./.scripts/security-local.sh
+    commands:
+      - name: secrets
+        tool: gitleaks
+        command: gitleaks detect --source . --verbose
+        required: true
+        scope: repo
+
+      - name: sast
+        tool: semgrep
+        command: semgrep --config auto --error
+        required: true
+        scope: changed_files
+
+      - name: dependencies
+        tool: owasp-dependency-check
+        command: ./mvnw org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=7
+        required: false
+
+  ci:
+    enabled: true
+    require_in_strict: true
+    workflow: ci
+    job: security

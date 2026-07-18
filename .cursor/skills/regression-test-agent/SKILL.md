@@ -64,7 +64,7 @@ Run pre-existing regression test suites through the CI pipeline. Behavior depend
    - Follow [jira-integration.md](../jira-integration.md)
    - Comment with CI link, PASS/FAIL/PARTIAL/NOT RUN, failed suites
    - On FAIL: comment "Escalate to Bugfix Agent with Jira bug ticket"
-   - Comment only — do not transition issues
+   - When status **PASS** and `jira.transitions.story_to_regression_pass` is set → transition; otherwise comment only
 
 ## CI Link Examples
 

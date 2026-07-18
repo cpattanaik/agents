@@ -4,7 +4,7 @@
 #   mkdir -p .github/workflows .github/scripts
 #   cp .github/workflows/ci.yml <app-repo>/.github/workflows/ci.yml
 #   cp .github/scripts/load-project-config.py <app-repo>/.github/scripts/
-#   cp project-config.yml.example <app-repo>/project-config.yml
+# Edit project-config.yml for build commands and regression profile names.
 #
 # Matches project-config.yml:
 #   pipeline.gates.regression.ci_workflow / ci_job

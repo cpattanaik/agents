@@ -27,7 +27,7 @@ If PRD or architecture content is missing, stop and ask the user to provide them
 
 If Jira is not configured (no MCP/REST, or missing `jira.project_key`):
 - **`pipeline.mode: strict`** → FAIL the planning gate
-- **`pipeline.mode: dev`** → FAIL the planning gate — Jira is required for epic/story creation; configure MCP first (see [MCP-SETUP.md](../../docs/MCP-SETUP.md))
+- **`pipeline.mode: dev`** → FAIL the planning gate — Jira is required for epic/story creation; configure MCP first (see [MCP-SETUP.md](../../.docs/MCP-SETUP.md))
 
 If GitHub Wiki MCP is not configured:
 - **`strict`** → FAIL (documents must be published to wiki)
@@ -61,14 +61,13 @@ If GitHub Wiki MCP is not configured:
 
 ### B. Publish documents to GitHub Wiki
 
-5. **Create epic wiki folder** per [wiki-integration.md](../wiki-integration.md) — paths from `project-config.yml` (`project.slug`, `jira.epic_key`):
-   - `Projects/{slug}/Epics/{EPIC-KEY}/Overview`
+5. **Publish epic documents** per [wiki-integration.md](../wiki-integration.md) — paths from `project-config.yml` (`project.slug`, `jira.epic_key`):
    - `Projects/{slug}/Epics/{EPIC-KEY}/PRD`
    - `Projects/{slug}/Epics/{EPIC-KEY}/Architecture`
 
 6. **Publish PRD and Architecture** via `github-wiki` MCP (`write_wiki_page`)
 
-Do **not** create wiki pages under `Stories/` — story details (user story, AC, DoD) live in **Jira only**. Wiki holds epic-level documents (Overview, PRD, Architecture, agent reports).
+Do **not** create wiki pages under `Stories/` — story details (user story, AC, DoD) live in **Jira only**. Wiki holds PRD, Architecture, Designs, and agent reports.
 
 ### C. Validate and cross-check
 
@@ -83,15 +82,15 @@ Do **not** create wiki pages under `Stories/` — story details (user story, AC,
     - Every Must-have PRD story has a Jira story
     - Every Jira story maps to a PRD user story or FR
     - Blocked-by dependencies documented
-    - Every Jira story description includes wiki links to epic docs (Overview, PRD, Architecture) — not per-story wiki pages
+    - Every Jira story description includes wiki links to PRD and Architecture — not per-story wiki pages
 
 12. **Produce planning gate report**
 
 13. **Publish report to wiki** → `.../Agent-Reports/planning-agent-{date}.md`
 
 14. **Update Jira** — on PASS:
-    - Comment on epic with wiki URLs: Overview, PRD, Architecture, planning report
-    - Comment on each story with wiki URLs: PRD, Architecture, epic Overview (no story wiki page)
+    - Comment on epic with wiki URLs: PRD, Architecture, planning report
+    - Comment on each story with wiki URLs: PRD, Architecture (no story wiki page)
     - Transition stories to **Refined** only when `jira.transitions.story_to_refined` is set (non-null); otherwise comment only — see [jira-integration.md](../jira-integration.md)
 
 ## Story creation template (Jira description)
@@ -101,7 +100,6 @@ Do **not** create wiki pages under `Stories/` — story details (user story, AC,
 As a [persona], I [action] so that [benefit].
 
 ## Wiki
-- Epic: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/Overview
 - PRD: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/PRD
 - Architecture: https://github.com/{owner}/{repo}/wiki/Projects/{slug}/Epics/{EPIC-KEY}/Architecture
 
@@ -173,7 +171,6 @@ PASS | FAIL — ready for Design Agent
 ```
 Comment on epic PROJ-100:
   Planning Gate: PASS
-  Wiki Overview: https://github.com/org/repo/wiki/Projects/.../Epics/PROJ-100/Overview
   Wiki PRD: https://github.com/.../PRD
   Wiki Architecture: https://github.com/.../Architecture
   Stories ready for design: PROJ-101, PROJ-102, ...
@@ -182,7 +179,7 @@ Comment on epic PROJ-100:
 ## Rules
 
 - **Jira is mandatory** — create epic and Must-have stories when missing; do not run planning without Jira
-- **Do not create wiki story pages** — keep story details in Jira; wiki gets PRD, Architecture, Overview, and agent reports only
+- **Do not create wiki story pages** — keep story details in Jira; wiki gets PRD, Architecture, Designs, and agent reports only
 - Do not create stories for out-of-scope (non-goal) items in PRD
 - Do not duplicate stories — check epic children before creating
 - Do not write technical design — hand off to Design Agent

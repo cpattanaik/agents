@@ -18,11 +18,15 @@ Invoke with explicit scope in the user prompt (default: infer from artifacts):
 
 | Scope | Focus | Jira transition |
 |-------|-------|-----------------|
-| `design` | PRD, architecture, technical design, API contracts, threat model | On APPROVED (no Critical): transition stories → **Ready for Dev** |
-| `code` | Source changes, security, error handling, conventions | Comment only |
-| `tests` | Unit, integration, regression reports | Comment only |
+| `design` | PRD, architecture, technical design, API contracts, threat model | On APPROVED (no Critical): `story_to_ready_for_dev` → **Ready for Dev** |
+| `code` | Source changes, security, error handling, conventions | On APPROVED (no Critical): `story_to_code_review_approved` |
+| `tests` | Unit, integration, regression reports | Comment only (test agents own transitions) |
 | `bugfix` | Fix correctness, root cause, regression risk | Comment only |
 | `pipeline` | Agent SKILL files, rules, handoffs | Comment only |
+
+**Gate config** ([project-config.yml](../../project-config.yml)):
+- **Design scope:** when `pipeline.gates.review_design.mandatory_in_strict: true` (strict), design review is required before `@coding-agent`
+- **Code scope:** when `pipeline.gates.review_code.require_unit_test_pass: true`, verify `unit-test-agent-*.md` PASS on wiki before reviewing code; when `require_integration_test_pass: true`, also verify integration-test PASS
 
 Review these inputs when available:
 
@@ -74,15 +78,16 @@ Review these inputs when available:
    - Comment with **wiki URL** to report (required)
    - Follow [jira-integration.md](../jira-integration.md)
    - Comment on each linked issue with review summary, verdict, and report path
-   - **Design scope only:** on APPROVED or APPROVED WITH COMMENTS (no Critical items), when `jira.transitions.story_to_ready_for_dev` is set → transition stories **Ready for Dev**; otherwise comment only with approval note
-   - **Code/tests/bugfix scope:** comment only — do not transition
+   - **Design scope:** on APPROVED or APPROVED WITH COMMENTS (no Critical items), when `jira.transitions.story_to_ready_for_dev` is set → transition stories **Ready for Dev**; otherwise comment only
+   - **Code scope:** on APPROVED or APPROVED WITH COMMENTS (no Critical items), when `jira.transitions.story_to_code_review_approved` is set → transition per your workflow; otherwise comment only
+   - **Tests / bugfix / pipeline scope:** comment only — do not transition
 
 ### Jira comment format
 
 ```
 ## Review Agent Report
 **Verdict:** APPROVED | APPROVED WITH COMMENTS | CHANGES REQUESTED
-**Scope:** design | code | tests | bugfix
+**Scope:** design | code | tests | bugfix | pipeline
 [Summary + critical action items]
 ```
 

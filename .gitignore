@@ -1,5 +1,2 @@
-# Local project config — copy from project-config.yml.example per app repo
-project-config.yml
-
 # Vendored MCP server dependencies (dist/ is committed)
 .cursor/mcp-servers/**/node_modules

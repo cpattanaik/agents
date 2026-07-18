@@ -8,14 +8,14 @@ All agents live under `.cursor/skills/<agent-name>/SKILL.md`.
 
 | File | Purpose |
 |------|---------|
-| [docs/TESTING.md](../docs/TESTING.md) | Spring Boot Maven test setup + pom snippets |
-| [project-config.yml.example](../project-config.yml.example) | **Single project config** — copy to `project-config.yml` (gitignored locally) |
-| [.github/workflows/ci.yml](../.github/workflows/ci.yml) | CI template — copy with `.github/scripts/load-project-config.py` |
-| [docs/PROJECT-CONFIG.md](../docs/PROJECT-CONFIG.md) | Field reference and copy-to-new-repo guide |
+| [.docs/TESTING.md](../../.docs/TESTING.md) | Spring Boot Maven test setup + pom snippets |
+| [`project-config.yml`](../../project-config.yml) | **Single project config** — edit project + epic fields in one file |
+| [.github/workflows/ci.yml](../../.github/workflows/ci.yml) | CI template — copy with `.github/scripts/load-project-config.py` |
+| [.docs/PROJECT-CONFIG.md](../../.docs/PROJECT-CONFIG.md) | Field reference and copy-to-new-repo guide |
 | [jira-integration.md](jira-integration.md) | Jira epics/stories + wiki links in comments |
 | [wiki-integration.md](wiki-integration.md) | **All documents stored in GitHub Wiki under epic** |
 | [report-persistence.md](report-persistence.md) | Wiki publish workflow + optional repo mirror |
-| [MCP-SETUP.md](../docs/MCP-SETUP.md) | Configure Jira + GitHub Wiki MCP |
+| [MCP-SETUP.md](../../.docs/MCP-SETUP.md) | Configure Jira + GitHub Wiki MCP |
 
 ## Document model
 
@@ -87,12 +87,12 @@ flowchart TB
 
 ## Pipeline modes
 
-| Mode | Regression | Security | Report persistence | MCP / Jira |
-|------|------------|----------|-------------------|------------|
-| `dev` (default) | NOT RUN allowed | Local optional; CI optional | Recommended | **Jira required for Planning Agent**; wiki recommended |
-| `strict` (corporate) | PASS required; NOT RUN blocks PR | Local + CI PASS required | Mandatory | Required for all gated agents |
+| Mode | Gates | Notes |
+|------|-------|-------|
+| `dev` (default) | Relaxed via `pipeline.environments.dev.gates` | Jira required for Planning; wiki recommended |
+| `strict` | All `pipeline.gates.*.mandatory_in_strict: true` enforced | Full gate chain through PR; see orchestrator |
 
-Set in [project-config.yml](../project-config.yml) → `pipeline.mode`.
+Set in [`project-config.yml`](../../project-config.yml) → `pipeline.mode`.
 
 ## Usage
 
@@ -118,16 +118,27 @@ Copy this **bundle** into your **application repository** (not just the agents t
 
 ```bash
 # From the agents template repo root:
+./.scripts/copy-pipeline-bundle.sh /path/to/your-app
+```
+
+<details>
+<summary>Manual copy (equivalent commands)</summary>
+
+```bash
 APP=/path/to/your-app
+mkdir -p "$APP/.github/workflows" "$APP/.github/scripts" "$APP/.docs/agent-reports"
 
-mkdir -p "$APP/.github/workflows" "$APP/.github/scripts"
-
-cp -R .cursor "$APP/.cursor"
-cp project-config.yml.example "$APP/project-config.yml"
-cp docs/maven-profiles.example.xml "$APP/docs/" 2>/dev/null || true
+rsync -a --exclude='node_modules' .cursor/ "$APP/.cursor/"
+cp project-config.yml "$APP/project-config.yml"
+cp .docs/TESTING.md .docs/PROJECT-CONFIG.md .docs/MCP-SETUP.md .docs/maven-profiles.example.xml "$APP/.docs/"
+cp .docs/agent-reports/README.md "$APP/.docs/agent-reports/"
 cp .github/workflows/ci.yml "$APP/.github/workflows/ci.yml"
 cp .github/scripts/load-project-config.py "$APP/.github/scripts/"
 ```
+
+</details>
+
+**Template repo only:** `.scripts/` is not copied to the app repo — run `./.scripts/copy-pipeline-bundle.sh` from this agents template checkout. The app gets `.cursor/`, `project-config.yml`, `.docs/`, and `.github/`.
 
 Then edit `$APP/project-config.yml` (`project`, `github`, `jira`, `build`, `security`).
 
@@ -136,18 +147,18 @@ Then edit `$APP/project-config.yml` (`project`, `github`, `jira`, `build`, `secu
 | Step | Action | Required for strict mode |
 |------|--------|--------------------------|
 | 1 | Copy bundle above into app repo | Yes |
-| 2 | Edit `project-config.yml` (`pipeline.mode: dev` is default) | Yes |
-| 3 | Set shell env vars + restart Cursor MCP — [MCP-SETUP.md](../docs/MCP-SETUP.md) (included in `cp -R .cursor`; **required before `@planning-agent`**) | Yes |
+| 2 | Edit `project-config.yml` — project fields once; `jira.epic_key` per epic (`pipeline.mode: dev` is default) | Yes |
+| 3 | Set shell env vars + restart Cursor MCP — [MCP-SETUP.md](../../.docs/MCP-SETUP.md) (**required before `@planning-agent`**) | Yes |
 | 4 | Enable GitHub Wiki on app repo | Yes |
 | 5 | Set Jira transition IDs in `jira.transitions` (null = comment only until set) | Recommended |
-| 6 | Add `pom.xml` profiles + OWASP plugin — [TESTING.md](../docs/TESTING.md) | Yes (Maven) |
+| 6 | Merge `.docs/maven-profiles.example.xml` into `pom.xml` — [TESTING.md](../../.docs/TESTING.md) | Yes (Maven) |
 | 7 | Install local security tools: `gitleaks`, `semgrep` | Yes |
 | 8 | Set GitHub branch protection: require `ci-success` check | Recommended |
 | 9 | Switch `pipeline.mode` to `strict` after steps 3–8 pass | Yes |
 
 ### Gate report lookup (wiki-first)
 
-Agent reports live on **GitHub Wiki** under `Projects/{slug}/Epics/{EPIC-KEY}/Agent-Reports/`. Design, Orchestrator, and PR agents verify prior gates from wiki (or Jira comment links), not `docs/agent-reports/` unless `mirror_to_repo: true`. See [report-persistence.md](report-persistence.md).
+Agent reports live on **GitHub Wiki** under `Projects/{slug}/Epics/{EPIC-KEY}/Agent-Reports/`. Design, Orchestrator, and PR agents verify prior gates from wiki (or Jira comment links), not `.docs/agent-reports/` unless `mirror_to_repo: true`. See [report-persistence.md](report-persistence.md).
 
 ### Flow through PR merge
 
@@ -164,8 +175,8 @@ Planning → Design → Review(design) → Coding → Unit → Integration
 
 ## Jira + Wiki setup
 
-1. Copy [project-config.yml.example](../project-config.yml.example) → `project-config.yml` and edit
-2. Configure **Jira MCP** + **github-wiki MCP** — see [MCP-SETUP.md](../docs/MCP-SETUP.md)
+1. Edit [`project-config.yml`](../../project-config.yml) — project fields once; `jira.epic_key` per epic
+2. Configure **Jira MCP** + **github-wiki MCP** — see [MCP-SETUP.md](../../.docs/MCP-SETUP.md)
 3. Env vars: `ATLASSIAN_*`, `GITHUB_TOKEN`
 4. Align transition IDs in `project-config.yml` → `jira.transitions`
 
@@ -174,7 +185,7 @@ Planning → Design → Review(design) → Coding → Unit → Integration
 ```
 1. Human provides PRD + architecture content
 2. Planning Agent         → Jira epic/stories + publish PRD/Architecture to wiki
-3. Design Agent           → publish Technical-Design to wiki; Jira stories get wiki links
+3. Design Agent           → publish Designs/{STORY-KEY} per story; Jira stories get their design wiki links
 4. Review Agent (design)  → report to wiki; APPROVED → Ready for Dev
 5. Coding Agent           → implementation; report to wiki
 6. Unit Test Agent        → report to wiki
@@ -192,4 +203,4 @@ Use `@pipeline-orchestrator-agent` to verify gates before each phase.
 
 ## Audit trail
 
-Documents and reports are published to **GitHub Wiki** under the epic. Jira issues receive wiki links. Optional repo mirror: `docs/agent-reports/`. See [docs/agent-reports/README.md](../docs/agent-reports/README.md).
+Documents and reports are published to **GitHub Wiki** under the epic. Jira issues receive wiki links. Optional repo mirror: `.docs/agent-reports/`. See [.docs/agent-reports/README.md](../../.docs/agent-reports/README.md).

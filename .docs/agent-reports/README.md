@@ -35,7 +35,7 @@ wiki_url: https://github.com/.../wiki/.../Agent-Reports/planning-agent-20260716
 |----------|-----------|
 | PRD | `.../Epics/{EPIC-KEY}/PRD` |
 | Architecture | `.../Epics/{EPIC-KEY}/Architecture` |
-| Technical design | `.../Epics/{EPIC-KEY}/Technical-Design` |
+| Technical design | `.../Epics/{EPIC-KEY}/Designs/{STORY-KEY}` |
 | Agent reports | `.../Epics/{EPIC-KEY}/Agent-Reports/` |
 
 Story details (user story, AC, DoD) are in **Jira only** — not wiki pages.
@@ -45,7 +45,7 @@ Story details (user story, AC, DoD) are in **Jira only** — not wiki pages.
 When `project-config.yml` → `pipeline.reporting.mirror_to_repo: true`:
 
 ```
-docs/agent-reports/<jira-key>/<agent-name>-<timestamp>.md
+.docs/agent-reports/<jira-key>/<agent-name>-<timestamp>.md
 ```
 
 ## Configuration

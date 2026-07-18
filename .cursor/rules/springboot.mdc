@@ -29,11 +29,12 @@ Keep `Application.java` in the base package only.
 ## Dependencies & Build
 
 - Prefer **Spring Boot 3.x** with **Java 17+**
-- Use **Maven** (`pom.xml`) or **Gradle** (`build.gradle.kts`) — match what the project already uses
+- **Pipeline / CI:** this template is **Maven-only** — use `pom.xml`, `./mvnw`, and merge [.docs/maven-profiles.example.xml](../../.docs/maven-profiles.example.xml) per [TESTING.md](../../.docs/TESTING.md). Commands come from `project-config.yml` → `build.*`
+- **Non-pipeline projects:** Gradle (`build.gradle.kts`) is fine if the repo already uses it — match the existing build tool
 - Core starters: `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`
 - Test starter: `spring-boot-starter-test` with JUnit 5
-- Run locally: `./mvnw spring-boot:run` or `./gradlew bootRun`
-- Package: `./mvnw package` or `./gradlew build`
+- Run locally (Maven): `./mvnw spring-boot:run` — or `./gradlew bootRun` for Gradle-only repos
+- Package (Maven): `./mvnw package` — or `./gradlew build` for Gradle-only repos
 
 ## Coding Conventions
 

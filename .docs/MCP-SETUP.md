@@ -31,11 +31,16 @@ GitHub PAT: Settings → Developer settings → PAT → `repo` scope.
 
 MCP config ships in `.cursor/mcp.json` (env var references only — **never put tokens in this file**).
 
-**New app repo:** copy the whole `.cursor` folder — no MCP file edits needed:
+**New app repo:** copy the **full pipeline bundle** (includes `.cursor/` with `mcp.json` and vendored servers). No MCP file edits needed after copy:
 
 ```bash
-cp -R /path/to/agents/.cursor /path/to/your-app/.cursor
+# From the agents template repo root:
+./.scripts/copy-pipeline-bundle.sh /path/to/your-app
 ```
+
+Or copy manually — see [Integrate into a new project](../.cursor/skills/README.md#integrate-into-a-new-project) or [PROJECT-CONFIG.md](PROJECT-CONFIG.md#copying-to-a-new-project).
+
+Run the copy script from the **agents template repo** (`.scripts/` is not copied to app repos).
 
 **This repo:** `.cursor/mcp.json` is already present. Set env vars (section 1) and restart Cursor.
 
@@ -78,11 +83,7 @@ This server provides `write_wiki_page`, `read_wiki_page`, `list_wiki_pages`, etc
 
 ## 3. Project configuration
 
-```bash
-cp project-config.yml.example project-config.yml
-```
-
-Edit `project-config.yml` for your repository:
+Edit [`project-config.yml`](../project-config.yml) for your repository:
 
 ```yaml
 project:
@@ -120,10 +121,11 @@ Repo → **Settings → Features → Wikis** → Enable.
 
 ```
 Projects/<project-slug>/Epics/<EPIC-KEY>/
-├── Overview
 ├── PRD
 ├── Architecture
-├── Technical-Design
+├── Designs/
+│   ├── PROJ-101.md
+│   └── PROJ-102.md
 ├── Agent-Reports/
 │   └── planning-agent-20260716.md
 ```
@@ -157,7 +159,7 @@ Then `@design-agent`, etc. — each publishes to wiki and updates Jira with link
 
 | Issue | Fix |
 |-------|-----|
-| No MCP servers | Copy `.cursor` folder (includes `mcp.json`); set env vars; restart |
+| No MCP servers | Copy pipeline bundle (includes `.cursor/` + `mcp.json`); set env vars; restart |
 | `github-wiki-mcp` npm 404 / Connection closed | Use vendored `.cursor/mcp-servers/scripts/run-github-wiki-mcp.sh` (see `.cursor/mcp.json`) |
 | `mcp-atlassian` / atlassian Connection closed | Use vendored `.cursor/mcp-servers/scripts/run-atlassian-mcp.sh` — not `npx` or missing local `dist/` |
 | `MODULE_NOT_FOUND` … `mcp-servers/.../dist/index.js` | Do **not** point `mcp.json` at `node …/dist/index.js` — use wrapper scripts; or run `./.cursor/mcp-servers/scripts/setup-mcp-servers.sh` |

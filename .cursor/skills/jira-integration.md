@@ -4,7 +4,7 @@ All pipeline agents use this contract to read from and update Jira.
 
 ## Configuration file
 
-Read [project-config.yml](../../project-config.yml) from repo root (copy from [project-config.yml.example](../../project-config.yml.example)).
+Read [project-config.yml](../../project-config.yml) from repo root.
 
 | Field | Required | Use |
 |-------|----------|-----|
@@ -86,17 +86,23 @@ Use `GET /rest/api/3/issue/PROJ-123/transitions` to discover valid transition ID
 
 ### Null transitions (default in template)
 
-`project-config.yml.example` sets all `jira.transitions.*` to `null`. Agents **comment only** until you set real IDs:
+[`project-config.yml`](../../project-config.yml) sets all `jira.transitions.*` to `null` by default. Agents **comment only** until you set real IDs:
 
 ```yaml
 jira:
   transitions:
-    story_to_refined: "21"           # Planning Agent
-    story_to_ready_for_dev: "31"     # Review Agent (design scope)
-    story_to_in_progress: "11"       # Coding Agent
-    story_to_in_review: "41"         # Coding Agent (complete)
-    story_to_done: "51"              # PR Agent (after merge, if user confirms)
-    bug_to_in_progress: "11"         # Bugfix Agent
+    story_to_refined: "21"                    # Planning Agent
+    story_to_ready_for_dev: "31"              # Review Agent (design)
+    story_to_in_progress: "11"                # Coding Agent (start)
+    story_to_in_review: "41"                  # Coding Agent (complete)
+    story_to_code_review_approved: "42"       # Review Agent (code)
+    story_to_unit_test_pass: "43"             # Unit Test Agent
+    story_to_integration_test_pass: "44"      # Integration Test Agent
+    story_to_security_pass: "45"              # Security Review Agent
+    story_to_regression_pass: "46"            # Regression Test Agent
+    story_to_pr_open: "47"                    # PR Agent (PR opened)
+    story_to_done: "51"                       # PR Agent (after merge)
+    bug_to_in_progress: "11"                  # Bugfix Agent
 ```
 
 If a transition ID is `null` or the API returns an error, **comment only** and note the skip in the agent report.
@@ -120,7 +126,7 @@ Wiki PRD: https://github.com/org/repo/wiki/Projects/my-project/Epics/PROJ-100/PR
 Wiki Report: https://github.com/org/repo/wiki/.../Agent-Reports/planning-agent-20260716
 ```
 
-Optional repo mirror: `docs/agent-reports/` per [report-persistence.md](report-persistence.md).
+Optional repo mirror: `.docs/agent-reports/` per [report-persistence.md](report-persistence.md).
 
 ## Pipeline mode
 
@@ -163,23 +169,22 @@ Only transition issues when the agent's workflow explicitly requires it and the 
 
 ## Transition map (configure per project)
 
-| Agent | Typical transition | When |
-|-------|-------------------|------|
-| Planning | Create epic + stories from PRD | When epic/stories missing |
-| Planning | → Refined | PRD + stories ready |
-| Design | Comment only on design complete | Design doc written |
-| Review (design scope) | Stories → Ready for Dev | Design APPROVED, no Critical items |
-| Coding | Story → In Progress | Implementation started |
-| Coding | Story → In Review | Code complete |
-| Unit Test | Comment only | Test report |
-| Integration Test | Comment only | Integration test report |
-| Security Review | Comment only | Security report |
-| Review (code scope) | Comment only | Code review report |
-| Regression | Comment only | CI result |
-| PR | Story → In Review | PR opened |
-| PR | Story → Done | After merge (if user confirms) |
-| Bugfix | Bug → In Progress | Fix started |
-| Bugfix | Comment only | Fix report |
+| Agent | Config key | Typical transition | When |
+|-------|------------|-------------------|------|
+| Planning | `story_to_refined` | → Refined | PRD + stories ready |
+| Review (design) | `story_to_ready_for_dev` | → Ready for Dev | Design APPROVED, no Critical |
+| Coding | `story_to_in_progress` | → In Progress | Implementation started |
+| Coding | `story_to_in_review` | → In Review | Code complete |
+| Review (code) | `story_to_code_review_approved` | → (your workflow) | Code APPROVED, no Critical |
+| Unit Test | `story_to_unit_test_pass` | → (your workflow) | Report PASS |
+| Integration Test | `story_to_integration_test_pass` | → (your workflow) | Report PASS |
+| Security Review | `story_to_security_pass` | → (your workflow) | Report PASS |
+| Regression | `story_to_regression_pass` | → (your workflow) | CI PASS |
+| PR | `story_to_pr_open` | → (your workflow) | PR opened |
+| PR | `story_to_done` | → Done | After merge (user confirms) |
+| Bugfix | `bug_to_in_progress` | → In Progress | Fix started |
+| Design | — | Comment only | Design doc written |
+| Review (tests/bugfix) | — | Comment only | Report published |
 
 Replace transition names/IDs with your Jira workflow. When ID is `null` or transition fails, comment only and report the skip in the agent report.
 
@@ -191,12 +196,12 @@ Jira stores **links only** — full documents live in GitHub Wiki.
 |----------|-----------|-------------|
 | PRD | `.../Epics/{KEY}/PRD` | Comment wiki URL on epic + stories |
 | Architecture | `.../Epics/{KEY}/Architecture` | Comment wiki URL on epic + stories |
-| Tech design | `.../Epics/{KEY}/Technical-Design` | Comment wiki URL on epic + stories |
+| Tech design | `.../Epics/{KEY}/Designs/{STORY-KEY}` | Comment that story's design wiki URL on story + epic index |
 | Agent report | `.../Epics/{KEY}/Agent-Reports/{agent}-{date}` | Comment wiki URL on story/epic |
-
-Story details live in **Jira** (description, AC, DoD) — Planning Agent does not create wiki pages under `Stories/`.
 | PR | GitHub PR URL | Comment on story |
 | CI run | Actions run URL | Comment on story |
+
+Story details live in **Jira** (description, AC, DoD) — Planning Agent does not create wiki pages under `Stories/`.
 
 Configure paths in [project-config.yml](../../project-config.yml). See [wiki-integration.md](wiki-integration.md).
 

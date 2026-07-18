@@ -13,7 +13,8 @@ Automated security gate for corporate compliance (SOC2, AppSec). Runs **local to
 
 ## Prerequisites
 
-- Code changes complete; Review Agent code scope APPROVED or in progress
+- Code changes complete
+- When `pipeline.gates.security.require_code_review_approved: true` — verify latest `review-agent-*.md` scope=code is APPROVED
 - Jira story keys provided
 - [project-config.yml](../../project-config.yml) present with `security` section
 
@@ -93,7 +94,10 @@ Read [project-config.yml](../../project-config.yml):
 
 8. **Persist report** — publish to wiki `.../Agent-Reports/security-review-agent-{date}.md`
 
-9. **Update Jira** — comment with wiki report URL
+9. **Update Jira** (when Jira story keys provided)
+   - Follow [jira-integration.md](../jira-integration.md)
+   - Comment with wiki report URL
+   - When verdict **PASS** and `jira.transitions.story_to_security_pass` is set → transition; otherwise comment only
 
 ## Report template
 

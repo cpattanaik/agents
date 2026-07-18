@@ -13,7 +13,8 @@ Implement features per approved technical design and linked Jira stories.
 
 ## Prerequisites
 
-- Technical design doc exists and Review Agent approved (or APPROVED WITH COMMENTS, no Critical items)
+- Technical design doc exists and Review Agent **design** scope APPROVED (or APPROVED WITH COMMENTS, no Critical items)
+- When `pipeline.gates.coding.require_design_review_approved: true` — verify latest `review-agent-*.md` with scope=design is APPROVED before starting
 - Jira story keys provided
 - Project rules in `.cursor/rules/` reviewed
 
@@ -21,7 +22,7 @@ Implement features per approved technical design and linked Jira stories.
 
 | Input | Required |
 |-------|----------|
-| Technical design doc | Yes — wiki URL or path under `.../Technical-Design` |
+| Technical design doc | Yes — wiki URL under `.../Designs/{STORY-KEY}` for each story being implemented |
 | Jira story keys | Yes — stories being implemented |
 | Traceability matrix | From design doc — which components/APIs to build |
 | Project config | [project-config.yml](../../project-config.yml) — `build.compile_command` when `build.tool: maven` |
@@ -34,13 +35,13 @@ Implement features per approved technical design and linked Jira stories.
 
 2. **Update Jira — start**
    - When `jira.transitions.story_to_in_progress` is set → transition each story **In Progress**; otherwise comment only
-   - Comment: `Coding Agent: started — see wiki Technical-Design link on epic/story`
+   - Comment: `Coding Agent: started — see wiki Designs/{STORY-KEY} link on story`
 
-3. **Read design doc**
-   - Identify components, APIs, domain model for the assigned stories
-   - Match package structure and conventions in `.cursor/rules/`
+3. **Read design doc** for each assigned story from `.../Designs/{STORY-KEY}`
+   - Identify components, APIs, domain model from that story's design page
 
 4. **Implement in phases** (match design doc phases if present)
+   - Match package structure and conventions in `.cursor/rules/`
    - Domain model and enums
    - Services and business logic
    - API controllers and DTOs
@@ -101,7 +102,7 @@ COMPLETE | PARTIAL | BLOCKED
 ```
 # On start
 Transition PROJ-101 → In Progress
-Comment: Coding Agent started. Wiki Design: https://github.com/.../Technical-Design
+Comment: Coding Agent started. Wiki Design: https://github.com/.../Designs/PROJ-101
 
 # On complete
 Comment on PROJ-101:

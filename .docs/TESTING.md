@@ -17,7 +17,7 @@ src/test/java/
 | Integration | `integration` | `build.integration_test_command` | `integration-test` |
 | Regression | `regression` | `build.regression_command` | `regression` |
 
-Commands are defined in [project-config.yml](../project-config.yml) (copy from [project-config.yml.example](../project-config.yml.example)).
+Commands are defined in [project-config.yml](../project-config.yml). See [PROJECT-CONFIG.md](PROJECT-CONFIG.md) for editable fields.
 
 ## pom.xml setup
 
